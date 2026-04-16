@@ -1,0 +1,105 @@
+import { useState, useEffect, useCallback } from 'react'
+import { User, Teacher, Admin, UserRole, AuthSession } from '../types'
+
+const MOCK_USERS: Record<string, User | Teacher | Admin> = {
+  'admin@folusho.com': {
+    id: 'ADMIN001',
+    email: 'admin@folusho.com',
+    name: 'Admin User',
+    role: 'Admin',
+    password: 'admin123',
+  },
+  'teacher@folusho.com': {
+    id: 'TEACHER001',
+    email: 'teacher@folusho.com',
+    name: 'Mr. Adeyemi',
+    role: 'Teacher',
+    teacherId: 'T001',
+    subject: 'Mathematics',
+    level: 'Secondary',
+    assignedClasses: ['SSS1A', 'SSS1B', 'SSS2A'],
+    password: 'teacher123',
+  } as Teacher,
+}
+
+export function useAuth() {
+  const [session, setSession] = useState<AuthSession>({
+    user: null,
+    isAuthenticated: false,
+  })
+  const [isHydrated, setIsHydrated] = useState(false)
+
+  // Load session from localStorage on mount
+  useEffect(() => {
+    const stored = localStorage.getItem('authSession')
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored)
+        console.log('Loaded session from localStorage:', parsed)
+        setSession(parsed)
+      } catch (e) {
+        console.error('Failed to load auth session:', e)
+      }
+    }
+    setIsHydrated(true)
+  }, [])
+
+  const login = useCallback((email: string, password: string) => {
+    console.log('Login attempt:', email)
+    const user = MOCK_USERS[email]
+    
+    if (!user) {
+      console.log('User not found:', email)
+      return false
+    }
+
+    if ((user as any).password !== password) {
+      console.log('Password mismatch')
+      return false
+    }
+
+    // Remove password from stored user
+    const userToStore = { ...user } as any
+    delete userToStore.password
+
+    const newSession: AuthSession = {
+      user: userToStore,
+      isAuthenticated: true,
+      lastLogin: new Date().toISOString(),
+    }
+    
+    console.log('Setting session:', newSession)
+    setSession(newSession)
+    localStorage.setItem('authSession', JSON.stringify(newSession))
+    
+    // Force a small delay to ensure state updates
+    return true
+  }, [])
+
+  const logout = useCallback(() => {
+    console.log('Logout')
+    setSession({
+      user: null,
+      isAuthenticated: false,
+    })
+    localStorage.removeItem('authSession')
+  }, [])
+
+  const hasRole = useCallback((role: UserRole | UserRole[]) => {
+    if (!session.user) return false
+    if (Array.isArray(role)) {
+      return role.includes(session.user.role)
+    }
+    return session.user.role === role
+  }, [session.user])
+
+  return {
+    session,
+    login,
+    logout,
+    hasRole,
+    isAuthenticated: session.isAuthenticated,
+    user: session.user,
+    isHydrated,
+  }
+}

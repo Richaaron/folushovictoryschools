@@ -1,0 +1,84 @@
+:root {
+  --primary: #4f46e5; /* Indigo 600 */
+  --primary-hover: #4338ca; /* Indigo 700 */
+  --primary-light: #818cf8; /* Indigo 400 */
+}
+
+/* Custom Scrollbar for a more professional feel */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.3);
+  border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.5);
+}
+
+.card {
+  @apply bg-white dark:bg-gray-800/40 dark:backdrop-blur-md rounded-2xl shadow-sm p-4 border border-gray-100 dark:border-gray-700/50 transition-all duration-300;
+}
+
+.card-lg {
+  @apply bg-white dark:bg-gray-800/40 dark:backdrop-blur-md rounded-2xl shadow-lg p-6 border border-gray-100 dark:border-gray-700/50 transition-all duration-300 hover:shadow-xl hover:translate-y-[-2px];
+}
+
+.btn-primary {
+  @apply px-5 py-2.5 bg-indigo-600 dark:bg-indigo-500 text-white rounded-xl hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-all font-bold shadow-md hover:shadow-indigo-500/20 active:scale-95 flex items-center justify-center gap-2;
+}
+
+.btn-secondary {
+  @apply px-5 py-2.5 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all font-bold border border-gray-200 dark:border-gray-700 shadow-sm flex items-center justify-center gap-2;
+}
+
+.btn-danger {
+  @apply px-5 py-2.5 bg-rose-600 dark:bg-rose-500 text-white rounded-xl hover:bg-rose-700 dark:hover:bg-rose-600 transition-all font-bold shadow-md active:scale-95 flex items-center justify-center gap-2;
+}
+
+.input-field {
+  @apply w-full px-4 py-3 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:bg-white dark:focus:bg-gray-800 transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600;
+}
+
+.table-header {
+  @apply bg-gray-50/50 dark:bg-gray-800/30 backdrop-blur-sm px-6 py-4 text-left text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] border-b border-gray-100 dark:border-gray-800;
+}
+
+.table-cell {
+  @apply px-6 py-5 text-sm text-gray-600 dark:text-gray-300 border-b border-gray-50 dark:border-gray-800/50;
+}
+
+.badge {
+  @apply inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-black tracking-widest uppercase border;
+}
+
+.badge-success {
+  @apply bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-100 dark:border-emerald-500/20;
+}
+
+.badge-warning {
+  @apply bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-100 dark:border-amber-500/20;
+}
+
+.badge-danger {
+  @apply bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-100 dark:border-rose-500/20;
+}
+
+.fade-enter {
+  opacity: 0;
+  animation: fadeIn 0.3s ease-in forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
