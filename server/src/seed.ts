@@ -16,7 +16,7 @@ const DEFAULT_SUBJECTS = [
 const DEFAULT_ADMIN = {
   email: 'admin@folusho.com',
   name: 'Admin User',
-  password: 'admin123',
+  password: 'AdminPassword123!@#',
   role: 'Admin',
 }
 
@@ -39,7 +39,7 @@ async function seed() {
     name: 'Mr. Adeyemi',
     teacherId: 'T001',
     username: 'teacher',
-    password: 'teacher123',
+    password: 'TeacherPassword123!@#',
     subject: 'Mathematics',
     level: 'Secondary',
     assignedClasses: ['SSS1A', 'SSS1B', 'SSS2A'],

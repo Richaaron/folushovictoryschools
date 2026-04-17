@@ -3,38 +3,91 @@ import jwt from 'jsonwebtoken'
 import { User } from '../models/User'
 import { Teacher } from '../models/Teacher'
 import { Student } from '../models/Student'
+import { authLimiter } from '../middleware/security'
+import { generateToken, hashSensitiveData } from '../middleware/enhanced-auth'
+import {
+  validateEmail,
+  validatePassword,
+  validateName,
+  validateRequiredFields,
+} from '../utils/validation'
+import { getEnvConfig } from '../utils/envConfig'
 
 const router = Router()
-const JWT_SECRET = process.env.JWT_SECRET || 'your_fallback_secret_key'
+const envConfig = getEnvConfig()
 
-router.post('/login', async (req, res) => {
+/**
+ * Login endpoint with security enhancements:
+ * - Rate limiting
+ * - Input validation
+ * - Generic error messages to prevent user enumeration
+ * - Bcrypt for password comparison
+ */
+router.post('/login', authLimiter, async (req, res) => {
   try {
     const { email, password } = req.body
 
-    let user: any = await User.findOne({ email })
-    if (user) {
-      const isMatch = await user.comparePassword(password)
-      if (!isMatch) return res.status(401).json({ error: 'Invalid credentials' })
+    // Validate input
+    const emailValidation = validateEmail(email)
+    const passwordValidation = validatePassword(password)
+
+    if (!emailValidation.isValid || !passwordValidation.isValid) {
+      return res.status(400).json({
+        error: 'Invalid email or password format',
+        code: 'INVALID_INPUT',
+      })
     }
 
-    if (!user) {
-      user = await Teacher.findOne({ $or: [{ email }, { username: email }] })
-      if (user) {
-        const isMatch = await user.comparePassword(password)
-        if (!isMatch) return res.status(401).json({ error: 'Invalid credentials' })
+    const normalizedEmail = emailValidation.value
+
+    // Try to find user in User collection
+    let user: any = await User.findOne({ email: normalizedEmail })
+    let isValidUser = false
+
+    if (user) {
+      isValidUser = await user.comparePassword(password)
+      if (!isValidUser) {
+        // Generic error to prevent user enumeration
+        return res.status(401).json({
+          error: 'Invalid credentials',
+          code: 'INVALID_CREDENTIALS',
+        })
       }
     }
-    
+
+    // If not found in User, try Teacher
     if (!user) {
-      const student = await Student.findOne({ parentUsername: email })
+      user = await Teacher.findOne({
+        $or: [{ email: normalizedEmail }, { username: normalizedEmail }],
+      })
+      if (user) {
+        isValidUser = await user.comparePassword(password)
+        if (!isValidUser) {
+          return res.status(401).json({
+            error: 'Invalid credentials',
+            code: 'INVALID_CREDENTIALS',
+          })
+        }
+      }
+    }
+
+    // If not found in Teacher, try Student (parent login)
+    if (!user) {
+      const student = await Student.findOne({ parentUsername: normalizedEmail })
       if (student) {
-        const isMatch = await student.compareParentPassword(password)
-        if (isMatch) {
-          const token = jwt.sign(
-            { id: student._id, role: 'Parent' },
-            JWT_SECRET,
-            { expiresIn: '1d' }
+        isValidUser = await student.compareParentPassword(password)
+        if (isValidUser) {
+          const token = generateToken({
+            id: student._id.toString(),
+            role: 'Parent',
+            email: normalizedEmail,
+          })
+
+          // Log successful parent login (non-PII)
+          console.log(
+            `[AUTH] Parent login successful: ${hashSensitiveData(normalizedEmail)}`
           )
+
           return res.json({
             token,
             user: {
@@ -43,18 +96,25 @@ router.post('/login', async (req, res) => {
               name: `${student.parentName} (Parent of ${student.firstName})`,
               studentId: student._id,
               childName: student.firstName,
-            }
+            },
           })
         }
       }
-      return res.status(401).json({ error: 'Invalid credentials' })
+      return res.status(401).json({
+        error: 'Invalid credentials',
+        code: 'INVALID_CREDENTIALS',
+      })
     }
 
-    const token = jwt.sign(
-      { id: user._id, role: user.role },
-      JWT_SECRET,
-      { expiresIn: '1d' }
-    )
+    // Generate token using enhanced method
+    const token = generateToken({
+      id: user._id.toString(),
+      role: user.role,
+      email: user.email,
+    })
+
+    // Log successful login (non-PII)
+    console.log(`[AUTH] Login successful: ${hashSensitiveData(normalizedEmail)} (${user.role})`)
 
     res.json({
       token,
@@ -63,29 +123,89 @@ router.post('/login', async (req, res) => {
         email: user.email,
         name: user.name,
         role: user.role,
-      }
+      },
     })
   } catch (error) {
-    res.status(500).json({ error: 'Login failed' })
+    console.error('[AUTH] Login error:', error instanceof Error ? error.message : error)
+    res.status(500).json({
+      error: 'Login failed',
+      code: 'LOGIN_ERROR',
+    })
   }
 })
 
-router.post('/register', async (req, res) => {
+/**
+ * Register endpoint with enhanced validation
+ */
+router.post('/register', authLimiter, async (req, res) => {
   try {
     const { email, password, name, role } = req.body
-    
-    const existing = await User.findOne({ email })
-    if (existing) {
-      return res.status(400).json({ error: 'Email already exists' })
+
+    // Validate all inputs
+    const requiredFields = validateRequiredFields(req.body, [
+      'email',
+      'password',
+      'name',
+      'role',
+    ])
+    if (!requiredFields.isValid) {
+      return res.status(400).json({
+        error: requiredFields.errors[0],
+        code: 'MISSING_FIELDS',
+      })
     }
 
-    const user = new User({ email, password, name, role })
+    const emailValidation = validateEmail(email)
+    if (!emailValidation.isValid) {
+      return res.status(400).json({
+        error: emailValidation.errors[0],
+        code: 'INVALID_EMAIL',
+      })
+    }
+
+    const passwordValidation = validatePassword(password)
+    if (!passwordValidation.isValid) {
+      return res.status(400).json({
+        error: passwordValidation.errors,
+        code: 'WEAK_PASSWORD',
+      })
+    }
+
+    const nameValidation = validateName(name)
+    if (!nameValidation.isValid) {
+      return res.status(400).json({
+        error: nameValidation.errors[0],
+        code: 'INVALID_NAME',
+      })
+    }
+
+    // Check if user already exists
+    const existing = await User.findOne({ email: emailValidation.value })
+    if (existing) {
+      return res.status(409).json({
+        error: 'Email already registered',
+        code: 'EMAIL_EXISTS',
+      })
+    }
+
+    // Create new user
+    const user = new User({
+      email: emailValidation.value,
+      password,
+      name: nameValidation.value,
+      role,
+    })
     await user.save()
-    
-    const token = jwt.sign(
-      { id: user._id, role: user.role },
-      JWT_SECRET,
-      { expiresIn: '1d' }
+
+    // Generate token
+    const token = generateToken({
+      id: user._id.toString(),
+      role: user.role,
+      email: user.email,
+    })
+
+    console.log(
+      `[AUTH] User registered: ${hashSensitiveData(emailValidation.value)} (${role})`
     )
 
     res.status(201).json({
@@ -95,10 +215,32 @@ router.post('/register', async (req, res) => {
         email: user.email,
         name: user.name,
         role: user.role,
-      }
+      },
     })
   } catch (error) {
-    res.status(400).json({ error: 'Registration failed' })
+    console.error('[AUTH] Registration error:', error instanceof Error ? error.message : error)
+    res.status(500).json({
+      error: 'Registration failed',
+      code: 'REGISTRATION_ERROR',
+    })
+  }
+})
+
+/**
+ * Verify token endpoint
+ */
+router.post('/verify', async (req, res) => {
+  try {
+    const token = req.header('Authorization')?.replace('Bearer ', '')
+
+    if (!token) {
+      return res.status(401).json({ valid: false })
+    }
+
+    jwt.verify(token, envConfig.JWT_SECRET)
+    res.json({ valid: true })
+  } catch (error) {
+    res.status(401).json({ valid: false })
   }
 })
 
