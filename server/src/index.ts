@@ -84,7 +84,7 @@ app.use(securityHeaders)
 
 // CORS with restrictions
 const corsOrigin = envConfig.NODE_ENV === 'development' 
-  ? /^http:\/\/localhost:(5173|5174|5175|5176)$/  // Allow multiple dev ports
+  ? /^http:\/\/localhost:(5173|5174|5175|5176|5177)$/  // Allow multiple dev ports
   : envConfig.CORS_ORIGIN
 
 app.use(

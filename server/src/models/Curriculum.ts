@@ -5,7 +5,7 @@ export interface ICurriculum extends Document {
   version: string
   level: 'Pre-Nursery' | 'Nursery' | 'Primary' | 'Secondary'
   yearsOfStudy: number
-  subjects: string[] // Subject IDs
+  subjects: any[] // Subject IDs or populated Subject documents
   implementationDate: Date
   revisionDate?: Date
   description: string
@@ -26,7 +26,7 @@ const CurriculumSchema = new Schema<ICurriculum>(
       required: true 
     },
     yearsOfStudy: { type: Number, required: true },
-    subjects: [{ type: String }],
+    subjects: [{ type: Schema.Types.ObjectId, ref: 'Subject' }],
     implementationDate: { type: Date, required: true },
     revisionDate: { type: Date },
     description: { type: String },

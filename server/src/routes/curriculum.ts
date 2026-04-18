@@ -13,7 +13,7 @@ router.get('/', authenticate, async (req: AuthRequest, res) => {
     if (level) filter.level = level
     if (status) filter.status = status
 
-    const curriculums = await Curriculum.find(filter).sort({ implementationDate: -1 })
+    const curriculums = await Curriculum.find(filter).populate('subjects').sort({ implementationDate: -1 })
     res.json(curriculums)
   } catch (error) {
     console.error('Error fetching curriculums:', error)
@@ -24,7 +24,7 @@ router.get('/', authenticate, async (req: AuthRequest, res) => {
 // Get curriculum by ID
 router.get('/:id', authenticate, async (req, res) => {
   try {
-    const curriculum = await Curriculum.findById(req.params.id)
+    const curriculum = await Curriculum.findById(req.params.id).populate('subjects')
     if (!curriculum) return res.status(404).json({ error: 'Curriculum not found' })
     res.json(curriculum)
   } catch (error) {
