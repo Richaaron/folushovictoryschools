@@ -115,30 +115,31 @@ export default function StudentManagement() {
   ]
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-8">
       {/* Header */}
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 md:mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Student Management</h1>
-          <p className="text-gray-600 mt-2">Manage all students in the school</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Student Management</h1>
+          <p className="text-sm sm:text-base text-gray-600 mt-2">Manage all students in the school</p>
         </div>
-        <div className="flex gap-4">
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
           <button
             onClick={handleExport}
-            className="btn-secondary flex items-center gap-2"
+            className="btn-secondary flex items-center justify-center gap-2 flex-1 sm:flex-initial text-sm sm:text-base"
           >
             <Download size={20} />
-            Export
+            <span className="hidden sm:inline">Export</span>
           </button>
           <button
             onClick={() => {
               setEditingStudent(null)
               setShowForm(true)
             }}
-            className="btn-primary flex items-center gap-2"
+            className="btn-primary flex items-center justify-center gap-2 flex-1 sm:flex-initial text-sm sm:text-base"
           >
             <Plus size={20} />
-            Add Student
+            <span className="hidden sm:inline">Add Student</span>
+            <span className="sm:hidden">Add</span>
           </button>
         </div>
       </div>
@@ -162,10 +163,11 @@ export default function StudentManagement() {
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="level-filter" className="block text-sm font-medium text-gray-700 mb-2">
               Level
             </label>
             <select
+              id="level-filter"
               value={selectedLevel}
               onChange={(e) => setSelectedLevel(e.target.value as SchoolLevel | 'All')}
               className="input-field"

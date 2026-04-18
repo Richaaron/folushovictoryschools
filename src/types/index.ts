@@ -25,6 +25,10 @@ export interface Subject {
   code: string
   level: SchoolLevel
   creditUnits: number
+  subjectCategory?: 'CORE' | 'ELECTIVE' | 'VOCATIONAL'
+  description?: string
+  curriculumType?: 'NIGERIAN' | 'IGCSE' | 'OTHER'
+  prerequisiteSubjects?: string[]
 }
 
 export interface Result {
@@ -96,6 +100,54 @@ export interface GradeScale {
   grade: string
   gradePoint: number
   description: string
+}
+
+export interface Curriculum {
+  id: string
+  name: string
+  version: string
+  level: SchoolLevel
+  yearsOfStudy: number
+  subjects: string[]
+  implementationDate: string
+  revisionDate?: string
+  description: string
+  curriculum: 'NIGERIAN' | 'IGCSE' | 'OTHER'
+  status: 'ACTIVE' | 'ARCHIVED' | 'DRAFT'
+  createdBy: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface Topic {
+  weekNumber: number
+  topic: string
+  duration: number
+  objectives: string[]
+  resources: string[]
+  assessmentMethod: string
+  status: 'PLANNED' | 'IN_PROGRESS' | 'COMPLETED'
+}
+
+export interface SchemeOfWork {
+  id: string
+  teacherId: string
+  subjectId: string
+  classId: string
+  academicYear: string
+  term: number
+  curriculumId: string
+  topics: Topic[]
+  uploadedBy: string
+  uploadedDate: string
+  lastUpdated: string
+  version: number
+  status: 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'ACTIVE'
+  approvedBy?: string
+  approvalDate?: string
+  notes: string
+  createdAt: string
+  updatedAt: string
 }
 
 export const DEFAULT_GRADE_SCALE: GradeScale[] = [

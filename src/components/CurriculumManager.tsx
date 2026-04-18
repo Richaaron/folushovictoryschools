@@ -1,0 +1,179 @@
+import { useState, useEffect } from 'react'
+import { motion } from 'framer-motion'
+import { BookOpen, Plus, Edit, Trash2, CheckCircle, Eye } from 'lucide-react'
+import { Curriculum } from '../types'
+import { fetchCurriculums, deleteCurriculum } from '../services/api'
+
+interface CurriculumManagerProps {
+  level: string
+}
+
+export default function CurriculumManager({ level }: CurriculumManagerProps) {
+  const [curriculums, setCurriculums] = useState<Curriculum[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [selectedCurriculum, setSelectedCurriculum] = useState<Curriculum | null>(null)
+
+  useEffect(() => {
+    loadCurriculums()
+  }, [level])
+
+  const loadCurriculums = async () => {
+    setIsLoading(true)
+    try {
+      const data = await fetchCurriculums({ level, status: 'ACTIVE' })
+      setCurriculums(data)
+    } catch (error) {
+      console.error('Failed to load curriculums', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleDelete = async (id: string) => {
+    if (confirm('Are you sure you want to delete this curriculum?')) {
+      try {
+        await deleteCurriculum(id)
+        setCurriculums(curriculums.filter(c => c.id !== id))
+      } catch (error) {
+        console.error('Failed to delete curriculum', error)
+      }
+    }
+  }
+
+  if (isLoading) {
+    return <div className="p-4 text-center text-gray-500">Loading curriculums...</div>
+  }
+
+  return (
+    <div className="bg-white rounded-lg shadow-lg p-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+        <div className="flex items-center gap-3">
+          <BookOpen className="w-6 h-6 text-blue-600" />
+          <h2 className="text-2xl font-bold text-gray-900">Curriculum Catalog</h2>
+        </div>
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+        >
+          <Plus className="w-5 h-5" />
+          <span className="hidden sm:inline">New Curriculum</span>
+          <span className="sm:hidden">New</span>
+        </motion.button>
+      </div>
+
+      {curriculums.length === 0 ? (
+        <div className="text-center py-12 text-gray-500">
+          <BookOpen className="w-12 h-12 mx-auto mb-4 opacity-50" />
+          <p>No curriculums available for {level}</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {curriculums.map((curriculum) => (
+            <motion.div
+              key={curriculum.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="border-2 border-gray-200 rounded-lg p-4 hover:border-blue-400 hover:shadow-lg transition"
+            >
+              <div className="flex justify-between items-start mb-3">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">{curriculum.name}</h3>
+                  <p className="text-sm text-gray-600">v{curriculum.version}</p>
+                </div>
+                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                  curriculum.status === 'ACTIVE' 
+                    ? 'bg-green-100 text-green-700' 
+                    : 'bg-gray-100 text-gray-700'
+                }`}>
+                  {curriculum.status}
+                </span>
+              </div>
+
+              <p className="text-sm text-gray-600 mb-3">{curriculum.description}</p>
+
+              <div className="grid grid-cols-2 gap-2 mb-4 text-sm">
+                <div>
+                  <span className="text-gray-600">Duration:</span>
+                  <p className="font-semibold">{curriculum.yearsOfStudy} Years</p>
+                </div>
+                <div>
+                  <span className="text-gray-600">Subjects:</span>
+                  <p className="font-semibold">{curriculum.subjects.length}</p>
+                </div>
+              </div>
+
+              <div className="flex gap-2">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  onClick={() => setSelectedCurriculum(curriculum)}
+                  className="flex-1 flex items-center justify-center gap-1 bg-blue-100 text-blue-600 px-3 py-2 rounded hover:bg-blue-200 transition text-sm"
+                >
+                  <Eye className="w-4 h-4" />
+                  <span className="hidden sm:inline">View</span>
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  className="flex-1 flex items-center justify-center gap-1 bg-green-100 text-green-600 px-3 py-2 rounded hover:bg-green-200 transition text-sm"
+                >
+                  <CheckCircle className="w-4 h-4" />
+                  <span className="hidden sm:inline">Scheme</span>
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  className="px-3 py-2 bg-yellow-100 text-yellow-600 rounded hover:bg-yellow-200 transition"
+                >
+                  <Edit className="w-4 h-4" />
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  onClick={() => handleDelete(curriculum.id)}
+                  className="px-3 py-2 bg-red-100 text-red-600 rounded hover:bg-red-200 transition"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </motion.button>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      )}
+
+      {selectedCurriculum && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+          onClick={() => setSelectedCurriculum(null)}
+        >
+          <motion.div
+            className="bg-white rounded-lg max-w-2xl w-full max-h-96 overflow-y-auto p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-2xl font-bold mb-4">{selectedCurriculum.name}</h3>
+            <p className="text-gray-600 mb-4">{selectedCurriculum.description}</p>
+
+            <div className="mb-4">
+              <h4 className="font-semibold text-gray-900 mb-2">Subjects ({selectedCurriculum.subjects.length})</h4>
+              <div className="grid grid-cols-2 gap-2">
+                {selectedCurriculum.subjects.map((subjectId) => (
+                  <div key={subjectId} className="bg-gray-100 p-2 rounded text-sm">
+                    {subjectId}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex gap-4">
+              <button
+                onClick={() => setSelectedCurriculum(null)}
+                className="flex-1 bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
+              >
+                Close
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </div>
+  )
+}

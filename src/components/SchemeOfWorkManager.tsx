@@ -1,0 +1,320 @@
+import { useState, useEffect } from 'react'
+import { motion } from 'framer-motion'
+import { FileText, Plus, Edit, Trash2, CheckCircle, Send } from 'lucide-react'
+import { SchemeOfWork, Topic } from '../types'
+import { fetchSchemesOfWork, deleteSchemeOfWork, submitSchemeOfWork, updateSchemeOfWork } from '../services/api'
+
+interface SchemeOfWorkManagerProps {
+  teacherId: string
+  level: string
+}
+
+export default function SchemeOfWorkManager({ teacherId }: SchemeOfWorkManagerProps) {
+  const [schemes, setSchemes] = useState<SchemeOfWork[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [selectedScheme, setSelectedScheme] = useState<SchemeOfWork | null>(null)
+
+  useEffect(() => {
+    loadSchemes()
+  }, [teacherId])
+
+  const loadSchemes = async () => {
+    setIsLoading(true)
+    try {
+      const data = await fetchSchemesOfWork(teacherId)
+      setSchemes(data)
+    } catch (error) {
+      console.error('Failed to load schemes of work', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleDelete = async (id: string) => {
+    if (confirm('Are you sure you want to delete this scheme of work?')) {
+      try {
+        await deleteSchemeOfWork(id)
+        setSchemes(schemes.filter(s => s.id !== id))
+        if (selectedScheme?.id === id) setSelectedScheme(null)
+      } catch (error) {
+        console.error('Failed to delete scheme', error)
+      }
+    }
+  }
+
+  const handleSubmit = async (id: string) => {
+    try {
+      const result = await submitSchemeOfWork(id)
+      setSchemes(schemes.map(s => s.id === id ? result.scheme : s))
+      if (selectedScheme?.id === id) setSelectedScheme(result.scheme)
+    } catch (error) {
+      console.error('Failed to submit scheme', error)
+    }
+  }
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'DRAFT':
+        return 'bg-gray-100 text-gray-700'
+      case 'SUBMITTED':
+        return 'bg-blue-100 text-blue-700'
+      case 'APPROVED':
+        return 'bg-green-100 text-green-700'
+      case 'ACTIVE':
+        return 'bg-purple-100 text-purple-700'
+      default:
+        return 'bg-gray-100 text-gray-700'
+    }
+  }
+
+  const getProgressPercentage = (scheme: SchemeOfWork) => {
+    if (!scheme.topics || scheme.topics.length === 0) return 0
+    const completed = scheme.topics.filter(t => t.status === 'COMPLETED').length
+    return Math.round((completed / scheme.topics.length) * 100)
+  }
+
+  if (isLoading) {
+    return <div className="p-4 text-center text-gray-500">Loading schemes of work...</div>
+  }
+
+  return (
+    <div className="bg-white rounded-lg shadow-lg p-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+        <div className="flex items-center gap-3">
+          <FileText className="w-6 h-6 text-green-600" />
+          <h2 className="text-2xl font-bold text-gray-900">Scheme of Work</h2>
+        </div>
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => console.log('Create new scheme of work')}
+          className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition"
+        >
+          <Plus className="w-5 h-5" />
+          <span className="hidden sm:inline">New Scheme</span>
+          <span className="sm:hidden">New</span>
+        </motion.button>
+      </div>
+
+      {schemes.length === 0 ? (
+        <div className="text-center py-12 text-gray-500">
+          <FileText className="w-12 h-12 mx-auto mb-4 opacity-50" />
+          <p>No schemes of work created yet</p>
+          <p className="text-sm mt-2">Create your first scheme of work to get started</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {schemes.map((scheme) => (
+            <motion.div
+              key={scheme.id}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="border-l-4 border-green-600 bg-gradient-to-r from-green-50 to-transparent p-4 rounded-lg hover:shadow-md transition"
+            >
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <h3 className="text-lg font-semibold text-gray-900">{scheme.classId}</h3>
+                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(scheme.status)}`}>
+                      {scheme.status}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    {scheme.subjectId} • Term {scheme.term} • {scheme.academicYear}
+                  </p>
+                  <div className="mt-2 flex items-center gap-2">
+                    <div className="flex-1 bg-gray-200 rounded-full h-2 max-w-xs overflow-hidden">
+                      <motion.div
+                        className="bg-green-600 h-2 rounded-full"
+                        initial={{ width: 0 }}
+                        animate={{ width: `${getProgressPercentage(scheme)}%` }}
+                        transition={{ duration: 0.3 }}
+                      />
+                    </div>
+                    <span className="text-xs text-gray-600 whitespace-nowrap">
+                      {getProgressPercentage(scheme)}% Complete
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex gap-2 w-full md:w-auto">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    onClick={() => setSelectedScheme(scheme)}
+                    className="flex-1 md:flex-none flex items-center justify-center gap-1 bg-blue-100 text-blue-600 px-3 py-2 rounded hover:bg-blue-200 transition text-sm"
+                  >
+                    <Edit className="w-4 h-4" />
+                    <span className="hidden sm:inline">Edit</span>
+                  </motion.button>
+
+                  {scheme.status === 'DRAFT' && (
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      onClick={() => handleSubmit(scheme.id)}
+                      className="flex-1 md:flex-none flex items-center justify-center gap-1 bg-orange-100 text-orange-600 px-3 py-2 rounded hover:bg-orange-200 transition text-sm"
+                    >
+                      <Send className="w-4 h-4" />
+                      <span className="hidden sm:inline">Submit</span>
+                    </motion.button>
+                  )}
+
+                  {scheme.status === 'APPROVED' && (
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      className="flex-1 md:flex-none flex items-center justify-center gap-1 bg-green-100 text-green-600 px-3 py-2 rounded text-sm cursor-not-allowed opacity-75"
+                      disabled
+                    >
+                      <CheckCircle className="w-4 h-4" />
+                      <span className="hidden sm:inline">Approved</span>
+                    </motion.button>
+                  )}
+
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    onClick={() => handleDelete(scheme.id)}
+                    className="px-3 py-2 bg-red-100 text-red-600 rounded hover:bg-red-200 transition"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </motion.button>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      )}
+
+      {selectedScheme && (
+        <SchemeDetailModal
+          scheme={selectedScheme}
+          onClose={() => setSelectedScheme(null)}
+          onUpdate={loadSchemes}
+        />
+      )}
+    </div>
+  )
+}
+
+interface SchemeDetailModalProps {
+  scheme: SchemeOfWork
+  onClose: () => void
+  onUpdate: () => void
+}
+
+function SchemeDetailModal({ scheme, onClose, onUpdate }: SchemeDetailModalProps) {
+  const [topics, setTopics] = useState<Topic[]>(scheme.topics || [])
+  const [newTopic, setNewTopic] = useState<Partial<Topic>>({
+    weekNumber: (scheme.topics?.length || 0) + 1,
+    topic: '',
+    duration: 1,
+    objectives: [],
+    resources: [],
+    assessmentMethod: '',
+  })
+
+  const handleAddTopic = () => {
+    if (newTopic.topic) {
+      setTopics([...topics, { ...newTopic as Topic }])
+      setNewTopic({
+        weekNumber: topics.length + 2,
+        topic: '',
+        duration: 1,
+        objectives: [],
+        resources: [],
+        assessmentMethod: '',
+      })
+    }
+  }
+
+  const handleRemoveTopic = (index: number) => {
+    setTopics(topics.filter((_, i) => i !== index))
+  }
+
+  const handleSave = async () => {
+    try {
+      await updateSchemeOfWork(scheme.id, { topics })
+      onUpdate()
+      onClose()
+    } catch (error) {
+      console.error('Failed to update scheme', error)
+    }
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+      onClick={onClose}
+    >
+      <motion.div
+        className="bg-white rounded-lg max-w-3xl w-full max-h-96 overflow-y-auto p-6"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h3 className="text-2xl font-bold mb-4">{scheme.classId} - {scheme.subjectId}</h3>
+
+        <div className="space-y-4">
+          <div>
+            <h4 className="font-semibold text-gray-900 mb-3">Topics</h4>
+            {topics.map((topic, idx) => (
+              <div key={idx} className="bg-gray-50 p-3 rounded mb-2 flex justify-between items-start">
+                <div className="flex-1">
+                  <p className="font-medium text-gray-900">Week {topic.weekNumber}: {topic.topic}</p>
+                  <p className="text-sm text-gray-600">Duration: {topic.duration} weeks</p>
+                </div>
+                <button
+                  onClick={() => handleRemoveTopic(idx)}
+                  className="text-red-600 hover:text-red-700"
+                  title="Remove topic"
+                  aria-label={`Remove topic ${topic.topic}`}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+
+          <div className="border-t pt-4">
+            <h4 className="font-semibold text-gray-900 mb-3">Add Topic</h4>
+            <input
+              type="text"
+              placeholder="Topic name"
+              value={newTopic.topic || ''}
+              onChange={(e) => setNewTopic({ ...newTopic, topic: e.target.value })}
+              className="w-full border rounded px-3 py-2 mb-2"
+            />
+            <div className="flex gap-2 mb-3">
+              <input
+                type="number"
+                placeholder="Duration (weeks)"
+                value={newTopic.duration || 1}
+                onChange={(e) => setNewTopic({ ...newTopic, duration: parseInt(e.target.value) })}
+                className="w-24 border rounded px-3 py-2"
+              />
+              <button
+                onClick={handleAddTopic}
+                className="flex-1 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+              >
+                Add Topic
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex gap-4 mt-6">
+          <button
+            onClick={onClose}
+            className="flex-1 bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSave}
+            className="flex-1 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+          >
+            Save Scheme
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
+  )
+}

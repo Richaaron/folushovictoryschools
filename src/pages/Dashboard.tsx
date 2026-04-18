@@ -1,12 +1,12 @@
 import { useMemo, useEffect, useState } from 'react'
-import { Users, BookOpen, TrendingUp, AlertCircle } from 'lucide-react'
+import { Users, BookOpen, TrendingUp, AlertCircle, Lock, Eye, EyeOff, Check, X } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 import { motion } from 'framer-motion'
 import StatCard from '../components/StatCard'
 import { Student, SubjectResult } from '../types'
 import { fetchStudents, fetchResults } from '../services/api'
 
-const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6']
+const COLORS = ['#7c3aed', '#fbbf24', '#9333ea', '#d97706', '#6b21a8']
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -33,6 +33,20 @@ export default function Dashboard() {
   const [students, setStudents] = useState<Student[]>([])
   const [results, setResults] = useState<SubjectResult[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [showPasswordModal, setShowPasswordModal] = useState(false)
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  })
+  const [passwordError, setPasswordError] = useState('')
+  const [passwordSuccess, setPasswordSuccess] = useState('')
+  const [isChangingPassword, setIsChangingPassword] = useState(false)
+  const [showPassword, setShowPassword] = useState({
+    current: false,
+    new: false,
+    confirm: false
+  })
 
   useEffect(() => {
     const loadData = async () => {
@@ -110,6 +124,76 @@ export default function Dashboard() {
     return [...results].reverse().slice(0, 5)
   }, [results])
 
+  const validatePassword = (password: string): string[] => {
+    const errors = []
+    if (password.length < 12) errors.push('At least 12 characters')
+    if (!/[A-Z]/.test(password)) errors.push('One uppercase letter')
+    if (!/[a-z]/.test(password)) errors.push('One lowercase letter')
+    if (!/[0-9]/.test(password)) errors.push('One number')
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) errors.push('One special character')
+    return errors
+  }
+
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setPasswordError('')
+    setPasswordSuccess('')
+
+    if (!passwordForm.currentPassword || !passwordForm.newPassword || !passwordForm.confirmPassword) {
+      setPasswordError('All fields are required')
+      return
+    }
+
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setPasswordError('New passwords do not match')
+      return
+    }
+
+    const validationErrors = validatePassword(passwordForm.newPassword)
+    if (validationErrors.length > 0) {
+      setPasswordError(`New password must contain: ${validationErrors.join(', ')}`)
+      return
+    }
+
+    if (passwordForm.currentPassword === passwordForm.newPassword) {
+      setPasswordError('New password must be different from current password')
+      return
+    }
+
+    setIsChangingPassword(true)
+    try {
+      const token = localStorage.getItem('token')
+      const response = await fetch('http://localhost:3001/api/auth/change-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          currentPassword: passwordForm.currentPassword,
+          newPassword: passwordForm.newPassword
+        })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to change password')
+      }
+
+      setPasswordSuccess('Password changed successfully!')
+      setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' })
+      setTimeout(() => {
+        setShowPasswordModal(false)
+        setPasswordSuccess('')
+      }, 2000)
+    } catch (error: any) {
+      setPasswordError(error.message || 'Failed to change password')
+    } finally {
+      setIsChangingPassword(false)
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="p-8 flex items-center justify-center min-h-[400px]">
@@ -129,13 +213,25 @@ export default function Dashboard() {
       className="p-8 space-y-10"
     >
       {/* Header */}
-      <motion.div variants={itemVariants}>
-        <h1 className="text-4xl font-black text-gray-900 dark:text-white tracking-tight">
-          System <span className="text-indigo-600 dark:text-indigo-400">Intelligence</span>
-        </h1>
-        <p className="text-gray-500 dark:text-gray-400 mt-2 font-medium">
-          Welcome back. Here is your institutional performance overview.
-        </p>
+      <motion.div variants={itemVariants} className="flex flex-col sm:flex-row items-start justify-between gap-4">
+        <div className="flex-1">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-gray-900 dark:text-white tracking-tight">
+            System <span className="text-indigo-600 dark:text-indigo-400">Intelligence</span>
+          </h1>
+          <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 mt-2 font-medium">
+            Welcome back. Here is your institutional performance overview.
+          </p>
+        </div>
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => setShowPasswordModal(true)}
+          className="flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold transition-colors shadow-lg text-sm sm:text-base whitespace-nowrap"
+        >
+          <Lock className="w-4 h-4" />
+          <span className="hidden sm:inline">Change Password</span>
+          <span className="sm:hidden">Password</span>
+        </motion.button>
       </motion.div>
 
       {/* Stats Grid */}
@@ -167,10 +263,10 @@ export default function Dashboard() {
       </motion.div>
 
       {/* Charts Row */}
-      <motion.div variants={itemVariants} className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="card-lg">
-          <h2 className="text-xs font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] mb-8">Class Performance Distribution</h2>
-          <div className="h-72">
+      <motion.div variants={itemVariants} className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
+        <div className="card-lg overflow-x-auto">
+          <h2 className="text-xs font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] mb-6 md:mb-8">Class Performance Distribution</h2>
+          <div className="h-64 sm:h-72 min-w-[300px] sm:min-w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={classPerformanceData}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" className="dark:stroke-gray-800" />
@@ -183,7 +279,7 @@ export default function Dashboard() {
                       return (
                         <div className="bg-white dark:bg-gray-900 shadow-2xl rounded-xl border border-gray-100 dark:border-gray-800 p-4">
                           <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{payload[0].payload.name}</p>
-                          <p className="text-xl font-black text-indigo-600 dark:text-indigo-400">{payload[0].value}% <span className="text-[10px] text-gray-400 font-medium ml-1">Avg Score</span></p>
+                          <p className="text-lg sm:text-xl font-black text-indigo-600 dark:text-indigo-400">{payload[0].value}% <span className="text-[10px] text-gray-400 font-medium ml-1">Avg Score</span></p>
                         </div>
                       )
                     }
@@ -196,8 +292,8 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="card-lg">
-          <h2 className="text-xs font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] mb-8">Enrollment Demographics</h2>
+        <div className="card-lg overflow-x-auto">
+          <h2 className="text-xs font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] mb-6 md:mb-8">Enrollment Demographics</h2>
           <div className="h-72 flex items-center justify-center">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -233,6 +329,7 @@ export default function Dashboard() {
             <div className="flex flex-col gap-4 ml-8">
               {studentStatusData.map((entry, index) => (
                 <div key={entry.name} className="flex items-center gap-3">
+                  {/* eslint-disable-next-line react/style-prop-object */}
                   <div className="w-2.5 h-2.5 rounded-full" style={{backgroundColor: COLORS[index % COLORS.length]}} />
                   <div className="flex flex-col">
                     <span className="text-[10px] text-gray-400 font-black uppercase tracking-widest leading-none mb-1">{entry.name}</span>
@@ -278,6 +375,173 @@ export default function Dashboard() {
           </div>
         )}
       </motion.div>
+
+      {/* Change Password Modal */}
+      {showPasswordModal && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+          onClick={() => !isChangingPassword && setShowPasswordModal(false)}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-md w-full p-8 border border-gray-200 dark:border-gray-800"
+          >
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg">
+                <Lock className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+              </div>
+              <h2 className="text-2xl font-black text-gray-900 dark:text-white">Change Password</h2>
+            </div>
+
+            <form onSubmit={handlePasswordChange} className="space-y-4">
+              {/* Current Password */}
+              <div>
+                <label className="block text-xs font-black text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-2">
+                  Current Password
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPassword.current ? 'text' : 'password'}
+                    value={passwordForm.currentPassword}
+                    onChange={(e) => setPasswordForm({...passwordForm, currentPassword: e.target.value})}
+                    disabled={isChangingPassword}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+                    placeholder="Enter current password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword({...showPassword, current: !showPassword.current})}
+                    disabled={isChangingPassword}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                  >
+                    {showPassword.current ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              {/* New Password */}
+              <div>
+                <label className="block text-xs font-black text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-2">
+                  New Password
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPassword.new ? 'text' : 'password'}
+                    value={passwordForm.newPassword}
+                    onChange={(e) => setPasswordForm({...passwordForm, newPassword: e.target.value})}
+                    disabled={isChangingPassword}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+                    placeholder="Enter new password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword({...showPassword, new: !showPassword.new})}
+                    disabled={isChangingPassword}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                  >
+                    {showPassword.new ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+                <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-2">
+                  Must contain: 12+ characters, uppercase, lowercase, number, and special character
+                </p>
+              </div>
+
+              {/* Confirm Password */}
+              <div>
+                <label className="block text-xs font-black text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-2">
+                  Confirm New Password
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPassword.confirm ? 'text' : 'password'}
+                    value={passwordForm.confirmPassword}
+                    onChange={(e) => setPasswordForm({...passwordForm, confirmPassword: e.target.value})}
+                    disabled={isChangingPassword}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+                    placeholder="Confirm new password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword({...showPassword, confirm: !showPassword.confirm})}
+                    disabled={isChangingPassword}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                  >
+                    {showPassword.confirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Error Message */}
+              {passwordError && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-start gap-2"
+                >
+                  <X className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-red-600 dark:text-red-400">{passwordError}</p>
+                </motion.div>
+              )}
+
+              {/* Success Message */}
+              {passwordSuccess && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg flex items-start gap-2"
+                >
+                  <Check className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-green-600 dark:text-green-400">{passwordSuccess}</p>
+                </motion.div>
+              )}
+
+              {/* Buttons */}
+              <div className="flex gap-3 mt-6">
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  type="button"
+                  onClick={() => {
+                    setShowPasswordModal(false)
+                    setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' })
+                    setPasswordError('')
+                  }}
+                  disabled={isChangingPassword}
+                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 font-semibold transition-colors disabled:opacity-50"
+                >
+                  Cancel
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  type="submit"
+                  disabled={isChangingPassword}
+                  className="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {isChangingPassword ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      Updating...
+                    </>
+                  ) : (
+                    <>
+                      <Check className="w-4 h-4" />
+                      Update Password
+                    </>
+                  )}
+                </motion.button>
+              </div>
+            </form>
+          </motion.div>
+        </motion.div>
+      )}
     </motion.div>
   )
 }

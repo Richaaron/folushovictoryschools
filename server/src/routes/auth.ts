@@ -4,6 +4,7 @@ import { User } from '../models/User'
 import { Teacher } from '../models/Teacher'
 import { Student } from '../models/Student'
 import { authLimiter } from '../middleware/security'
+import { authenticate, AuthRequest } from '../middleware/auth'
 import { generateToken, hashSensitiveData } from '../middleware/enhanced-auth'
 import {
   validateEmail,
@@ -109,12 +110,12 @@ router.post('/login', authLimiter, async (req, res) => {
     // Generate token using enhanced method
     const token = generateToken({
       id: user._id.toString(),
-      role: user.role,
+      role: user.role || 'Teacher',
       email: user.email,
     })
 
     // Log successful login (non-PII)
-    console.log(`[AUTH] Login successful: ${hashSensitiveData(normalizedEmail)} (${user.role})`)
+    console.log(`[AUTH] Login successful: ${hashSensitiveData(normalizedEmail)} (${user.role || 'Teacher'})`)
 
     res.json({
       token,
@@ -122,7 +123,10 @@ router.post('/login', authLimiter, async (req, res) => {
         id: user._id,
         email: user.email,
         name: user.name,
-        role: user.role,
+        role: user.role || 'Teacher',
+        subject: user.subject,
+        level: user.level,
+        assignedClasses: user.assignedClasses,
       },
     })
   } catch (error) {
@@ -222,6 +226,82 @@ router.post('/register', authLimiter, async (req, res) => {
     res.status(500).json({
       error: 'Registration failed',
       code: 'REGISTRATION_ERROR',
+    })
+  }
+})
+
+/**
+ * Change password endpoint with enhanced security:
+ * - Requires authentication
+ * - Rate limited
+ * - Validates current password
+ * - Validates new password strength
+ * - Password updated with automatic bcrypt hashing
+ */
+router.post('/change-password', authLimiter, authenticate, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.user?.id
+    const { currentPassword, newPassword } = req.body
+
+    // Validate required fields
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({
+        error: 'Current password and new password are required',
+        code: 'MISSING_FIELDS',
+      })
+    }
+
+    // Validate new password strength
+    const passwordValidation = validatePassword(newPassword)
+    if (!passwordValidation.isValid) {
+      return res.status(400).json({
+        error: passwordValidation.errors,
+        code: 'WEAK_PASSWORD',
+      })
+    }
+
+    // Find user
+    const user = await User.findById(userId)
+    if (!user) {
+      return res.status(404).json({
+        error: 'User not found',
+        code: 'USER_NOT_FOUND',
+      })
+    }
+
+    // Verify current password
+    const isPasswordValid = await user.comparePassword(currentPassword)
+    if (!isPasswordValid) {
+      return res.status(401).json({
+        error: 'Current password is incorrect',
+        code: 'INVALID_PASSWORD',
+      })
+    }
+
+    // Ensure new password is different from current
+    const isSamePassword = await user.comparePassword(newPassword)
+    if (isSamePassword) {
+      return res.status(400).json({
+        error: 'New password must be different from current password',
+        code: 'SAME_PASSWORD',
+      })
+    }
+
+    // Update password (will be automatically hashed by pre-save hook)
+    user.password = newPassword
+    await user.save()
+
+    console.log(`[AUTH] Password changed for user: ${hashSensitiveData(user.email)}`)
+
+    res.json({
+      success: true,
+      message: 'Password changed successfully',
+    })
+  } catch (error) {
+    console.error('[AUTH] Change password error:', error instanceof Error ? error.message : error)
+    res.status(500).json({
+      error: 'Failed to change password',
+      code: 'CHANGE_PASSWORD_ERROR',
     })
   }
 })

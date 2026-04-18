@@ -1,4 +1,4 @@
-import { Student, Teacher, Subject, SubjectResult } from '../types'
+import { Student, Teacher, Subject, SubjectResult, Curriculum, SchemeOfWork } from '../types'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
 
@@ -183,3 +183,86 @@ export async function updateConfig(data: any): Promise<any> {
     body: JSON.stringify(data),
   })
 }
+
+// Curriculum
+export async function fetchCurriculums(params: { level?: string, status?: string } = {}): Promise<Curriculum[]> {
+  const query = new URLSearchParams(params as any).toString()
+  return apiFetch(`/curriculum?${query}`)
+}
+
+export async function fetchCurriculum(id: string): Promise<Curriculum> {
+  return apiFetch(`/curriculum/${id}`)
+}
+
+export async function createCurriculum(data: Partial<Curriculum>): Promise<Curriculum> {
+  return apiFetch('/curriculum', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
+}
+
+export async function updateCurriculum(id: string, data: Partial<Curriculum>): Promise<Curriculum> {
+  return apiFetch(`/curriculum/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  })
+}
+
+export async function deleteCurriculum(id: string): Promise<void> {
+  return apiFetch(`/curriculum/${id}`, {
+    method: 'DELETE'
+  })
+}
+
+export async function fetchCurriculumsByLevel(level: string): Promise<Curriculum[]> {
+  return apiFetch(`/curriculum/level/${level}`)
+}
+
+// Scheme of Work
+export async function fetchSchemesOfWork(teacherId: string): Promise<SchemeOfWork[]> {
+  return apiFetch(`/scheme-of-work/teacher/${teacherId}`)
+}
+
+export async function fetchSchemeOfWork(id: string): Promise<SchemeOfWork> {
+  return apiFetch(`/scheme-of-work/${id}`)
+}
+
+export async function createSchemeOfWork(data: Partial<SchemeOfWork>): Promise<SchemeOfWork> {
+  return apiFetch('/scheme-of-work', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
+}
+
+export async function updateSchemeOfWork(id: string, data: Partial<SchemeOfWork>): Promise<SchemeOfWork> {
+  return apiFetch(`/scheme-of-work/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  })
+}
+
+export async function submitSchemeOfWork(id: string): Promise<{ message: string, scheme: SchemeOfWork }> {
+  return apiFetch(`/scheme-of-work/${id}/submit`, {
+    method: 'PUT',
+  })
+}
+
+export async function approveSchemeOfWork(id: string): Promise<{ message: string, scheme: SchemeOfWork }> {
+  return apiFetch(`/scheme-of-work/${id}/approve`, {
+    method: 'PUT',
+  })
+}
+
+export async function updateTopicStatus(schemeId: string, weekNumber: number, status: string): Promise<SchemeOfWork> {
+  return apiFetch(`/scheme-of-work/${schemeId}/topic/${weekNumber}`, {
+    method: 'PUT',
+    body: JSON.stringify({ status }),
+  })
+}
+
+export async function deleteSchemeOfWork(id: string): Promise<void> {
+  return apiFetch(`/scheme-of-work/${id}`, {
+    method: 'DELETE'
+  })
+}
+

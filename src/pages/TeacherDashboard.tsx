@@ -1,7 +1,10 @@
 import { useMemo, useEffect, useState } from 'react'
 import { Users, BookOpen, TrendingUp, AlertCircle } from 'lucide-react'
+import { motion } from 'framer-motion'
 import StatCard from '../components/StatCard'
 import Table from '../components/Table'
+import CurriculumManager from '../components/CurriculumManager'
+import SchemeOfWorkManager from '../components/SchemeOfWorkManager'
 import { useAuthContext } from '../context/AuthContext'
 import { Student, SubjectResult, Subject } from '../types'
 import { formatDate } from '../utils/calculations'
@@ -14,6 +17,7 @@ export default function TeacherDashboard() {
   const [results, setResults] = useState<SubjectResult[]>([])
   const [subjects, setSubjects] = useState<Subject[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState<'results' | 'curriculum' | 'scheme'>('results')
 
   useEffect(() => {
     loadData()
@@ -105,7 +109,7 @@ export default function TeacherDashboard() {
   if (isLoading) return <div className="p-8 text-center">Loading dashboard...</div>
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">
           Welcome, {teacher.name}
@@ -145,18 +149,66 @@ export default function TeacherDashboard() {
         />
       </div>
 
-      <div className="bg-white rounded-lg shadow-lg p-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">
-          Class Results
-        </h2>
-        {tableData.length > 0 ? (
-          <Table columns={columns} data={tableData} />
-        ) : (
-          <div className="text-center py-8 text-gray-500">
-            <p>No results recorded yet for your classes.</p>
-          </div>
-        )}
+      {/* Tab Navigation */}
+      <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+        {(['results', 'curriculum', 'scheme'] as const).map((tab) => (
+          <motion.button
+            key={tab}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setActiveTab(tab)}
+            className={`px-4 py-2 rounded-lg font-semibold whitespace-nowrap transition ${
+              activeTab === tab
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
+          >
+            {tab === 'results' && 'Class Results'}
+            {tab === 'curriculum' && 'Curriculum'}
+            {tab === 'scheme' && 'Scheme of Work'}
+          </motion.button>
+        ))}
       </div>
+
+      {/* Results Tab */}
+      {activeTab === 'results' && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white rounded-lg shadow-lg p-6"
+        >
+          <h2 className="text-xl font-bold text-gray-900 mb-4">
+            Class Results
+          </h2>
+          {tableData.length > 0 ? (
+            <Table columns={columns} data={tableData} />
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              <p>No results recorded yet for your classes.</p>
+            </div>
+          )}
+        </motion.div>
+      )}
+
+      {/* Curriculum Tab */}
+      {activeTab === 'curriculum' && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <CurriculumManager level={teacher.level} />
+        </motion.div>
+      )}
+
+      {/* Scheme of Work Tab */}
+      {activeTab === 'scheme' && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <SchemeOfWorkManager teacherId={teacher.email} level={teacher.level} />
+        </motion.div>
+      )}
     </div>
   )
 }

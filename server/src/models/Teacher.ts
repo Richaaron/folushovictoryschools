@@ -11,6 +11,7 @@ export interface ITeacher extends Document {
   level: 'Pre-Nursery' | 'Nursery' | 'Primary' | 'Secondary'
   assignedClasses: string[]
   image?: string
+  role: 'Teacher'
   comparePassword: (password: string) => Promise<boolean>
 }
 
@@ -24,6 +25,7 @@ const TeacherSchema = new Schema<ITeacher>({
   level: { type: String, enum: ['Pre-Nursery', 'Nursery', 'Primary', 'Secondary'], required: true },
   assignedClasses: [{ type: String }],
   image: { type: String },
+  role: { type: String, default: 'Teacher' },
 })
 
 TeacherSchema.pre('save', async function (next) {

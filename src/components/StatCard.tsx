@@ -10,10 +10,10 @@ interface StatCardProps {
 
 export default function StatCard({ icon, label, value, color, trend }: StatCardProps) {
   const colorMap = {
-    blue: 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400',
+    blue: 'bg-purple-50 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400',
     green: 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
-    purple: 'bg-violet-50 dark:bg-violet-500/10 text-violet-600 dark:text-violet-400',
-    orange: 'bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400',
+    purple: 'bg-gold-50 dark:bg-gold-500/10 text-gold-600 dark:text-gold-400',
+    orange: 'bg-gold-50 dark:bg-gold-500/10 text-gold-600 dark:text-gold-400',
     red: 'bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400',
   }
 

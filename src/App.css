@@ -1,7 +1,11 @@
 :root {
-  --primary: #4f46e5; /* Indigo 600 */
-  --primary-hover: #4338ca; /* Indigo 700 */
-  --primary-light: #818cf8; /* Indigo 400 */
+  --primary: #7c3aed; /* Purple 600 */
+  --primary-hover: #6d28d9; /* Purple 700 */
+  --primary-light: #a78bfa; /* Purple 400 */
+  --accent: #fbbf24; /* Gold 400 */
+  --accent-hover: #f59e0b; /* Gold 500 */
+  --dark: #1a1a1a; /* Pure Black */
+  --dark-secondary: #2d1b69; /* Dark Purple */
 }
 
 /* Custom Scrollbar for a more professional feel */
@@ -20,35 +24,39 @@
 }
 
 .card {
-  @apply bg-white dark:bg-gray-800/40 dark:backdrop-blur-md rounded-2xl shadow-sm p-4 border border-gray-100 dark:border-gray-700/50 transition-all duration-300;
+  @apply bg-white dark:bg-black/50 dark:backdrop-blur-md rounded-2xl shadow-sm p-4 border border-purple-200/30 dark:border-purple-700/30 transition-all duration-300 hover:border-gold-400/50;
 }
 
 .card-lg {
-  @apply bg-white dark:bg-gray-800/40 dark:backdrop-blur-md rounded-2xl shadow-lg p-6 border border-gray-100 dark:border-gray-700/50 transition-all duration-300 hover:shadow-xl hover:translate-y-[-2px];
+  @apply bg-white dark:bg-black/60 dark:backdrop-blur-md rounded-2xl shadow-lg p-6 border border-purple-200/40 dark:border-purple-600/40 transition-all duration-300 hover:shadow-xl hover:translate-y-[-2px] hover:border-gold-400/60;
 }
 
 .btn-primary {
-  @apply px-5 py-2.5 bg-indigo-600 dark:bg-indigo-500 text-white rounded-xl hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-all font-bold shadow-md hover:shadow-indigo-500/20 active:scale-95 flex items-center justify-center gap-2;
+  @apply px-5 py-2.5 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-xl hover:from-purple-700 hover:to-purple-800 transition-all font-bold shadow-lg hover:shadow-purple-500/40 active:scale-95 flex items-center justify-center gap-2;
 }
 
 .btn-secondary {
-  @apply px-5 py-2.5 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all font-bold border border-gray-200 dark:border-gray-700 shadow-sm flex items-center justify-center gap-2;
+  @apply px-5 py-2.5 bg-white dark:bg-purple-900/30 text-purple-700 dark:text-gold-300 rounded-xl hover:bg-purple-50 dark:hover:bg-purple-800/40 transition-all font-bold border-2 border-purple-300 dark:border-purple-600 shadow-sm flex items-center justify-center gap-2;
 }
 
 .btn-danger {
   @apply px-5 py-2.5 bg-rose-600 dark:bg-rose-500 text-white rounded-xl hover:bg-rose-700 dark:hover:bg-rose-600 transition-all font-bold shadow-md active:scale-95 flex items-center justify-center gap-2;
 }
 
+.btn-accent {
+  @apply px-5 py-2.5 bg-gradient-to-r from-gold-400 to-gold-500 text-black rounded-xl hover:from-gold-500 hover:to-gold-600 transition-all font-bold shadow-lg hover:shadow-gold-500/40 active:scale-95 flex items-center justify-center gap-2;
+}
+
 .input-field {
-  @apply w-full px-4 py-3 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:bg-white dark:focus:bg-gray-800 transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600;
+  @apply w-full px-4 py-3 bg-gray-50 dark:bg-black/40 border-2 border-purple-200 dark:border-purple-700/50 text-gray-900 dark:text-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 dark:focus:ring-gold-400 focus:bg-white dark:focus:bg-black/60 transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600;
 }
 
 .table-header {
-  @apply bg-gray-50/50 dark:bg-gray-800/30 backdrop-blur-sm px-6 py-4 text-left text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] border-b border-gray-100 dark:border-gray-800;
+  @apply bg-gradient-to-r from-purple-600 to-purple-700 backdrop-blur-sm px-6 py-4 text-left text-[10px] font-black text-gold-200 uppercase tracking-[0.2em] border-b-2 border-gold-400/30;
 }
 
 .table-cell {
-  @apply px-6 py-5 text-sm text-gray-600 dark:text-gray-300 border-b border-gray-50 dark:border-gray-800/50;
+  @apply px-6 py-5 text-sm text-gray-700 dark:text-gray-300 border-b border-purple-200/20 dark:border-purple-800/30 hover:bg-purple-50/20 dark:hover:bg-purple-900/20 transition-colors;
 }
 
 .badge {
@@ -60,7 +68,7 @@
 }
 
 .badge-warning {
-  @apply bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-100 dark:border-amber-500/20;
+  @apply bg-gold-50 dark:bg-gold-500/10 text-gold-700 dark:text-gold-400 border-gold-100 dark:border-gold-500/20;
 }
 
 .badge-danger {
@@ -81,4 +89,53 @@
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* Luxury animations */
+@keyframes glowPulse {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(251, 191, 36, 0.3), 0 0 40px rgba(124, 58, 237, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(251, 191, 36, 0.5), 0 0 60px rgba(124, 58, 237, 0.3);
+  }
+}
+
+.btn-primary:hover {
+  animation: glowPulse 2s ease-in-out;
+}
+
+/* Smooth gradient backgrounds */
+.sidebar-gradient {
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d1b69 50%, #1a1a1a 100%);
+  background-size: 200% 200%;
+  animation: gradientShift 15s ease infinite;
+}
+
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Card hover effects */
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(124, 58, 237, 0.15);
+}
+
+.card-lg:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 40px rgba(124, 58, 237, 0.2), 0 0 30px rgba(251, 191, 36, 0.1);
+}
+
+/* Gold accent glow on focus */
+.input-field:focus {
+  box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.1), 0 0 20px rgba(124, 58, 237, 0.2);
 }

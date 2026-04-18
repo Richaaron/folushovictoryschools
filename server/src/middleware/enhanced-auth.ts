@@ -36,10 +36,11 @@ export const authenticate = (req: AuthRequest, res: Response, next: NextFunction
 
   try {
     // Verify token with proper error handling
-    const decoded = jwt.verify(token, envConfig.JWT_SECRET) as {
+    const decoded = jwt.verify(token, envConfig.JWT_SECRET as string) as {
       id: string
       role: string
       email: string
+      iat?: number
     }
 
     // Check token expiry (in case it's close to expiration)
@@ -114,7 +115,7 @@ export const optionalAuth = (req: AuthRequest, res: Response, next: NextFunction
   }
 
   try {
-    const decoded = jwt.verify(token, envConfig.JWT_SECRET) as {
+    const decoded = jwt.verify(token, envConfig.JWT_SECRET as string) as {
       id: string
       role: string
       email: string
@@ -132,11 +133,10 @@ export const optionalAuth = (req: AuthRequest, res: Response, next: NextFunction
  * Generate JWT token
  * Use constant-time operations for security
  */
-export const generateToken = (payload: { id: string; role: string; email: string }) => {
-  return jwt.sign(payload, envConfig.JWT_SECRET, {
-    expiresIn: envConfig.JWT_EXPIRY,
-    algorithm: 'HS256',
-  })
+export const generateToken = (payload: { id: string; role: string; email: string }): string => {
+  const secret = envConfig.JWT_SECRET || ''
+  const expiresIn = envConfig.JWT_EXPIRY || '7d'
+  return jwt.sign(payload, secret, { expiresIn: expiresIn } as any)
 }
 
 /**
