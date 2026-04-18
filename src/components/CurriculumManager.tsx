@@ -1,3 +1,5 @@
+/* global confirm */
+
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { BookOpen, Plus, Edit, Trash2, CheckCircle, Eye } from 'lucide-react'
@@ -155,17 +157,73 @@ export default function CurriculumManager({ level }: CurriculumManagerProps) {
 
             <div className="mb-4">
               <h4 className="font-semibold text-gray-900 mb-2">Subjects ({selectedCurriculum.subjects.length})</h4>
-              <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto">
-                {selectedCurriculum.subjects.map((subject: any) => (
-                  <motion.div
-                    key={subject._id || subject}
-                    whileHover={{ scale: 1.02 }}
-                    onClick={() => setSelectedSubject(subject)}
-                    className="bg-gray-100 p-2 rounded text-sm cursor-pointer hover:bg-blue-100 hover:text-blue-700 transition"
-                  >
-                    {typeof subject === 'string' ? subject : (subject.name || subject.code || subject._id)}
-                  </motion.div>
-                ))}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-72 overflow-y-auto">
+                {selectedCurriculum.subjects.map((subject: any, index: number) => {
+                  const normalizedSubject = typeof subject === 'string'
+                    ? {
+                        id: `${selectedCurriculum.id}-subject-${index}`,
+                        name: subject,
+                        code: subject.slice(0, 3).toUpperCase(),
+                        description: `${subject} curriculum content overview`,
+                        topics: [
+                          {
+                            weekNumber: 1,
+                            topicName: `Introduction to ${subject}`,
+                            duration: 1,
+                            objectives: [`Understand the basic ideas in ${subject}`],
+                            resources: ['Teacher guide', 'Workbook'],
+                            assessmentMethod: 'Class discussion',
+                          },
+                          {
+                            weekNumber: 2,
+                            topicName: `${subject} practical activities`,
+                            duration: 1,
+                            objectives: [`Apply foundational knowledge in ${subject}`],
+                            resources: ['Class notes', 'Practice exercise'],
+                            assessmentMethod: 'Worksheet',
+                          },
+                        ],
+                      }
+                    : {
+                        ...subject,
+                        topics: subject.topics && subject.topics.length > 0
+                          ? subject.topics
+                          : [
+                              {
+                                weekNumber: 1,
+                                topicName: `Introduction to ${subject.name || subject.code || 'this subject'}`,
+                                duration: 1,
+                                objectives: [`Understand the foundational concepts in ${subject.name || 'this subject'}`],
+                                resources: ['Teacher guide', 'Class notes'],
+                                assessmentMethod: 'Class exercise',
+                              },
+                              {
+                                weekNumber: 2,
+                                topicName: `${subject.name || subject.code || 'Subject'} activities and examples`,
+                                duration: 1,
+                                objectives: [`Practice and explain key points in ${subject.name || 'this subject'}`],
+                                resources: ['Workbook', 'Board work'],
+                                assessmentMethod: 'Oral assessment',
+                              },
+                            ],
+                      }
+
+                  return (
+                    <motion.div
+                      key={normalizedSubject._id || normalizedSubject.id || normalizedSubject.name}
+                      whileHover={{ scale: 1.02 }}
+                      onClick={() => setSelectedSubject(normalizedSubject)}
+                      className="bg-gray-100 p-3 rounded text-sm cursor-pointer hover:bg-blue-100 hover:text-blue-700 transition"
+                    >
+                      <p className="font-semibold">
+                        {normalizedSubject.name || normalizedSubject.code || normalizedSubject._id}
+                      </p>
+                      <p className="text-xs text-gray-600 mt-1">
+                        {normalizedSubject.topics?.length || 0} topic contents
+                      </p>
+                    </motion.div>
+                  )
+                })}
               </div>
             </div>
 

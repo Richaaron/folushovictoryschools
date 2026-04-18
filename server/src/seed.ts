@@ -5,6 +5,7 @@ import { User } from './models/User'
 import { Teacher } from './models/Teacher'
 import { Subject } from './models/Subject'
 import { Curriculum } from './models/Curriculum'
+import { SchemeOfWork } from './models/SchemeOfWork'
 
 dotenv.config()
 
@@ -582,6 +583,7 @@ async function seed() {
   await Teacher.deleteMany({})
   await Subject.deleteMany({})
   await Curriculum.deleteMany({})
+  await SchemeOfWork.deleteMany({})
 
   await User.create(DEFAULT_ADMIN)
   console.log('✅ Created default admin')
@@ -638,6 +640,66 @@ async function seed() {
     assignedClasses: ['SSS1A', 'SSS1B', 'SSS2A'],
   })
   console.log('✅ Created default teacher')
+
+  // Get curriculum IDs
+  const primaryCurr = await Curriculum.findOne({ level: 'Primary' })
+  const secondaryCurr = await Curriculum.findOne({ level: 'Secondary' })
+
+  // Define classes by level
+  const classMap: Record<string, string[]> = {
+    'Pre-Nursery': ['Pre-Nursery A', 'Pre-Nursery B'],
+    'Nursery': ['Nursery A', 'Nursery B', 'Nursery C'],
+    'Primary': ['Primary 1', 'Primary 2', 'Primary 3', 'Primary 4', 'Primary 5', 'Primary 6'],
+    'Secondary': ['JSS 1A', 'JSS 1B', 'JSS 2A', 'JSS 2B', 'JSS 3A', 'JSS 3B', 'SSS 1A', 'SSS 1B', 'SSS 2A', 'SSS 2B', 'SSS 3A', 'SSS 3B'],
+  }
+
+  // Generate scheme of work for each subject
+  const schemesData: any[] = []
+  for (const subject of subjects) {
+    const classes = classMap[subject.level] || [subject.level + ' A']
+    const curriculum = subject.level.includes('Primary') ? primaryCurr : secondaryCurr
+
+    // Create 3 schemes per subject (for 3 terms)
+    for (let term = 1; term <= 3; term++) {
+      // Create a scheme for the first class in the list
+      const classId = classes[0]
+      
+      // Convert subject topics to scheme topics
+      const schemeTopics = (subject.topics || []).map((topic: any) => ({
+        weekNumber: topic.weekNumber,
+        topic: topic.topicName,
+        duration: topic.duration,
+        objectives: topic.objectives || [],
+        resources: topic.resources || [],
+        assessmentMethod: topic.assessmentMethod,
+        status: 'PLANNED',
+      }))
+
+      schemesData.push({
+        teacherId: 'teacher1@folusho.com',
+        subjectId: subject._id.toString(),
+        classId,
+        academicYear: '2025/2026',
+        term,
+        curriculumId: curriculum?._id.toString() || '',
+        topics: schemeTopics,
+        uploadedBy: 'teacher1@folusho.com',
+        uploadedDate: new Date(),
+        lastUpdated: new Date(),
+        version: 1,
+        status: 'APPROVED',
+        approvedBy: 'admin@folusho.com',
+        approvalDate: new Date(),
+        notes: `Pre-configured scheme of work for ${subject.name} - ${subject.level} (Term ${term}, Academic Year 2025/2026)`,
+      })
+    }
+  }
+
+  // Create all schemes of work
+  if (schemesData.length > 0) {
+    await SchemeOfWork.insertMany(schemesData)
+    console.log(`✅ Created ${schemesData.length} scheme of work entries for all subjects`)
+  }
 
   console.log('\n🎓 Seed completed successfully!')
   console.log(`Total Subjects: ${subjects.length}`)

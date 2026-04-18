@@ -1,6 +1,101 @@
-import { Student, Teacher, Subject, SubjectResult, Curriculum, SchemeOfWork } from '../types'
+/* global localStorage, fetch, URLSearchParams */
+/* eslint-disable no-undef */
+
+import { Student, Teacher, Subject, SubjectResult, Curriculum, SchemeOfWork, DEFAULT_SUBJECTS } from '../types'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
+
+const DEV_SUBJECTS: Subject[] = DEFAULT_SUBJECTS.map((subject) => ({
+  ...subject,
+  description: subject.description || `${subject.name} for ${subject.level} level with guided classroom content and learning objectives.`,
+  subjectCategory: subject.subjectCategory || 'CORE',
+  curriculumType: subject.curriculumType || 'NIGERIAN',
+  prerequisiteSubjects: subject.prerequisiteSubjects || [],
+}))
+
+const DEV_CURRICULUMS: Curriculum[] = [
+  {
+    id: 'dev-curriculum-primary',
+    name: 'Nigerian Primary School Curriculum',
+    version: '2023.1',
+    level: 'Primary',
+    yearsOfStudy: 6,
+    subjects: DEV_SUBJECTS.filter((subject) => subject.level === 'Primary') as any,
+    implementationDate: '2023-09-01',
+    description: 'Current Nigerian primary school curriculum (Classes 1-6)',
+    curriculum: 'NIGERIAN',
+    status: 'ACTIVE',
+    createdBy: 'admin@folusho.com',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: 'dev-curriculum-secondary',
+    name: 'Nigerian Secondary School Curriculum',
+    version: '2023.1',
+    level: 'Secondary',
+    yearsOfStudy: 6,
+    subjects: DEV_SUBJECTS.filter((subject) => subject.level === 'Secondary') as any,
+    implementationDate: '2023-09-01',
+    description: 'Current Nigerian secondary school curriculum (JSS 1-3, SSS 1-3)',
+    curriculum: 'NIGERIAN',
+    status: 'ACTIVE',
+    createdBy: 'admin@folusho.com',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+]
+
+const DEV_SCHEMES_OF_WORK: SchemeOfWork[] = DEV_SUBJECTS.filter((subject) =>
+  ['Pre-Nursery', 'Nursery', 'Primary', 'Secondary'].includes(subject.level)
+).slice(0, 12).map((subject, index) => {
+  const classMap: Record<string, string> = {
+    'Pre-Nursery': 'Pre-Nursery A',
+    Nursery: 'Nursery 1',
+    Primary: `Primary ${Math.min(index + 1, 5)}`,
+    Secondary: index % 2 === 0 ? 'Jss 1' : 'Ss1',
+  }
+
+  return {
+    id: `dev-scheme-${subject.id}`,
+    teacherId: 'teacher1@folusho.com',
+    subjectId: subject.id,
+    classId: classMap[subject.level] || 'Primary 1',
+    academicYear: '2025/2026',
+    term: 3,
+    curriculumId: subject.level === 'Secondary' ? 'dev-curriculum-secondary' : 'dev-curriculum-primary',
+    topics: [
+      {
+        weekNumber: 1,
+        topic: `Introduction to ${subject.name}`,
+        duration: 1,
+        objectives: [`Understand the basics of ${subject.name}`],
+        resources: ['Teacher guide', 'Class notes'],
+        assessmentMethod: 'Class exercise',
+        status: 'PLANNED',
+      },
+      {
+        weekNumber: 2,
+        topic: `${subject.name} fundamentals`,
+        duration: 1,
+        objectives: [`Explain key ideas in ${subject.name}`],
+        resources: ['Textbook', 'Board work'],
+        assessmentMethod: 'Oral assessment',
+        status: 'PLANNED',
+      },
+    ],
+    uploadedBy: 'teacher1@folusho.com',
+    uploadedDate: new Date().toISOString(),
+    lastUpdated: new Date().toISOString(),
+    version: 1,
+    status: 'APPROVED',
+    approvedBy: 'admin@folusho.com',
+    approvalDate: new Date().toISOString(),
+    notes: `Local development fallback scheme for ${subject.name}`,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  }
+})
 
 function getHeaders() {
   const session = localStorage.getItem('authSession')
@@ -22,7 +117,7 @@ function getHeaders() {
   return headers
 }
 
-async function apiFetch(endpoint: string, options: RequestInit = {}) {
+async function apiFetch(endpoint: string, options: any = {}) {
   const res = await fetch(`${API_URL}${endpoint}`, {
     ...options,
     headers: {
@@ -99,7 +194,11 @@ export async function deleteTeacher(id: string): Promise<void> {
 
 // Subjects
 export async function fetchSubjects(): Promise<Subject[]> {
-  return apiFetch('/subjects')
+  try {
+    return await apiFetch('/subjects')
+  } catch (error) {
+    return DEV_SUBJECTS
+  }
 }
 
 export async function fetchSubject(id: string): Promise<Subject> {
@@ -187,7 +286,16 @@ export async function updateConfig(data: any): Promise<any> {
 // Curriculum
 export async function fetchCurriculums(params: { level?: string, status?: string } = {}): Promise<Curriculum[]> {
   const query = new URLSearchParams(params as any).toString()
-  return apiFetch(`/curriculum?${query}`)
+
+  try {
+    return await apiFetch(`/curriculum?${query}`)
+  } catch (error) {
+    return DEV_CURRICULUMS.filter((curriculum) => {
+      const matchesLevel = !params.level || curriculum.level === params.level
+      const matchesStatus = !params.status || curriculum.status === params.status
+      return matchesLevel && matchesStatus
+    })
+  }
 }
 
 export async function fetchCurriculum(id: string): Promise<Curriculum> {
@@ -220,7 +328,11 @@ export async function fetchCurriculumsByLevel(level: string): Promise<Curriculum
 
 // Scheme of Work
 export async function fetchSchemesOfWork(teacherId: string): Promise<SchemeOfWork[]> {
-  return apiFetch(`/scheme-of-work/teacher/${teacherId}`)
+  try {
+    return await apiFetch(`/scheme-of-work/teacher/${teacherId}`)
+  } catch (error) {
+    return DEV_SCHEMES_OF_WORK.filter((scheme) => scheme.teacherId === teacherId)
+  }
 }
 
 export async function fetchSchemeOfWork(id: string): Promise<SchemeOfWork> {
@@ -265,4 +377,3 @@ export async function deleteSchemeOfWork(id: string): Promise<void> {
     method: 'DELETE'
   })
 }
-

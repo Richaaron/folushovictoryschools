@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Check, User, GraduationCap, Users, BookOpen, Zap, Trophy } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useAuthContext } from '../context/AuthContext'
@@ -230,10 +230,10 @@ export default function Login({ onLoginSuccess }: LoginProps) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-black to-purple-950 flex items-center justify-center p-4 relative overflow-hidden">
       <AcademicBackground />
-      <div className="w-full max-w-md relative z-10">
+      <div className="w-full max-w-5xl relative z-10 flex flex-col items-center">
         {/* Logo */}
         <motion.div
-          className="text-center mb-8"
+          className="w-full flex flex-col items-center text-center mb-8"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
@@ -247,13 +247,35 @@ export default function Login({ onLoginSuccess }: LoginProps) {
           >
             <GraduationCap className="w-8 h-8 text-black" strokeWidth={2} />
           </motion.div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-gold-400 to-gold-300 bg-clip-text text-transparent mb-2">FOLUSHO</h1>
-          <p className="text-gold-200">Result Management System</p>
+          <motion.h1
+            className="w-full max-w-4xl mx-auto whitespace-nowrap text-[1.05rem] sm:text-[1.35rem] md:text-[1.8rem] lg:text-[2.3rem] font-black uppercase tracking-[0.12em] text-center mb-3"
+            animate={{
+              scale: [1, 1.03, 1],
+              textShadow: [
+                '0 0 12px rgba(251,191,36,0.35), 0 0 24px rgba(245,158,11,0.2)',
+                '0 0 20px rgba(251,191,36,0.75), 0 0 40px rgba(245,158,11,0.45)',
+                '0 0 12px rgba(251,191,36,0.35), 0 0 24px rgba(245,158,11,0.2)',
+              ],
+            }}
+            transition={{
+              duration: 2.8,
+              repeat: Infinity,
+              ease: 'easeInOut',
+            }}
+            style={{
+              color: '#fbbf24',
+              WebkitTextStroke: '1px rgba(120, 53, 15, 0.65)',
+              letterSpacing: '0.12em',
+            }}
+          >
+            FOLUSHO VICTORY SCHOOLS
+          </motion.h1>
+          <p className="text-gold-200 font-semibold tracking-[0.25em] uppercase">Result Management System</p>
         </motion.div>
 
         {/* Login Card */}
         <motion.div
-          className="bg-white dark:bg-black/60 dark:backdrop-blur-md rounded-lg shadow-2xl p-8 border border-gold-200/30 dark:border-gold-500/20"
+          className="w-full max-w-md bg-white dark:bg-black/60 dark:backdrop-blur-md rounded-lg shadow-2xl p-8 border border-gold-200/30 dark:border-gold-500/20"
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.6, delay: 0.1 }}

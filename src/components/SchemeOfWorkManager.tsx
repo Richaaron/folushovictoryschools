@@ -1,37 +1,49 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { FileText, Plus, Edit, Trash2, CheckCircle, Send } from 'lucide-react'
-import { SchemeOfWork, Topic } from '../types'
-import { fetchSchemesOfWork, deleteSchemeOfWork, submitSchemeOfWork, updateSchemeOfWork } from '../services/api'
+import { SchemeOfWork, Subject, Topic } from '../types'
+import { fetchSchemesOfWork, fetchSubjects, deleteSchemeOfWork, submitSchemeOfWork, updateSchemeOfWork } from '../services/api'
 
 interface SchemeOfWorkManagerProps {
   teacherId: string
-  level: string
 }
 
 export default function SchemeOfWorkManager({ teacherId }: SchemeOfWorkManagerProps) {
   const [schemes, setSchemes] = useState<SchemeOfWork[]>([])
+  const [subjects, setSubjects] = useState<Subject[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [selectedScheme, setSelectedScheme] = useState<SchemeOfWork | null>(null)
 
   useEffect(() => {
-    loadSchemes()
+    loadSchemesAndSubjects()
   }, [teacherId])
 
-  const loadSchemes = async () => {
+  const loadSchemesAndSubjects = async () => {
     setIsLoading(true)
+    setError(null)
     try {
-      const data = await fetchSchemesOfWork(teacherId)
-      setSchemes(data)
-    } catch (error) {
+      const [schemeData, subjectData] = await Promise.all([
+        fetchSchemesOfWork(teacherId),
+        fetchSubjects(),
+      ])
+      setSchemes(schemeData)
+      setSubjects(subjectData)
+    } catch (error: any) {
       console.error('Failed to load schemes of work', error)
+      setError(error.message || 'Failed to load schemes. Check connection or permissions.')
     } finally {
       setIsLoading(false)
     }
   }
 
+  const getSubjectName = (subjectId: string) => {
+    const matchedSubject = subjects.find((subject) => subject.id === subjectId)
+    return matchedSubject?.name || subjectId
+  }
+
   const handleDelete = async (id: string) => {
-    if (confirm('Are you sure you want to delete this scheme of work?')) {
+    if (window.confirm('Are you sure you want to delete this scheme of work?')) {
       try {
         await deleteSchemeOfWork(id)
         setSchemes(schemes.filter(s => s.id !== id))
@@ -73,8 +85,68 @@ export default function SchemeOfWorkManager({ teacherId }: SchemeOfWorkManagerPr
     return Math.round((completed / scheme.topics.length) * 100)
   }
 
+  const classOrder = [
+    'Pre-Nursery',
+    'Nursery 1',
+    'Nursery 2',
+    'Primary 1',
+    'Primary 2',
+    'Primary 3',
+    'Primary 4',
+    'Primary 5',
+    'Jss 1',
+    'Jss 2',
+    'Jss 3',
+    'Ss1',
+    'Ss2',
+    'Ss3',
+  ]
+
+  const getClassSortValue = (classId: string) => {
+    const normalizedClassId = classId.trim().toLowerCase()
+
+    const classIndex = classOrder.findIndex((className) =>
+      normalizedClassId.startsWith(className.toLowerCase())
+    )
+
+    return classIndex === -1 ? Number.MAX_SAFE_INTEGER : classIndex
+  }
+
+  const sortedSchemes = [...schemes].sort((a, b) => {
+    const orderDifference = getClassSortValue(a.classId) - getClassSortValue(b.classId)
+
+    if (orderDifference !== 0) return orderDifference
+
+    return a.classId.localeCompare(b.classId, undefined, { numeric: true, sensitivity: 'base' })
+  })
+
   if (isLoading) {
     return <div className="p-4 text-center text-gray-500">Loading schemes of work...</div>
+  }
+
+  if (error) {
+    return (
+      <div className="p-6">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+          <div className="flex items-start">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-red-400 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-red-800 font-medium">{error}</p>
+            </div>
+            <button
+              onClick={loadSchemesAndSubjects}
+              className="ml-auto bg-red-600 text-white px-3 py-1 rounded text-xs hover:bg-red-700 ml-3"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -99,12 +171,19 @@ export default function SchemeOfWorkManager({ teacherId }: SchemeOfWorkManagerPr
       {schemes.length === 0 ? (
         <div className="text-center py-12 text-gray-500">
           <FileText className="w-12 h-12 mx-auto mb-4 opacity-50" />
-          <p>No schemes of work created yet</p>
-          <p className="text-sm mt-2">Create your first scheme of work to get started</p>
+          <p className="font-medium text-gray-700 mb-1">No schemes of work found</p>
+          <p className="text-sm">Create your first scheme or contact admin if you expect existing schemes.</p>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            onClick={loadSchemesAndSubjects}
+            className="mt-4 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 font-medium"
+          >
+            Refresh
+          </motion.button>
         </div>
       ) : (
         <div className="space-y-4">
-          {schemes.map((scheme) => (
+          {sortedSchemes.map((scheme) => (
             <motion.div
               key={scheme.id}
               initial={{ opacity: 0, x: -20 }}
@@ -120,7 +199,7 @@ export default function SchemeOfWorkManager({ teacherId }: SchemeOfWorkManagerPr
                     </span>
                   </div>
                   <p className="text-sm text-gray-600">
-                    {scheme.subjectId} • Term {scheme.term} • {scheme.academicYear}
+                    {getSubjectName(scheme.subjectId)} • Term {scheme.term} • {scheme.academicYear}
                   </p>
                   <div className="mt-2 flex items-center gap-2">
                     <div className="flex-1 bg-gray-200 rounded-full h-2 max-w-xs overflow-hidden">
@@ -187,7 +266,8 @@ export default function SchemeOfWorkManager({ teacherId }: SchemeOfWorkManagerPr
         <SchemeDetailModal
           scheme={selectedScheme}
           onClose={() => setSelectedScheme(null)}
-          onUpdate={loadSchemes}
+          onUpdate={loadSchemesAndSubjects}
+          getSubjectName={getSubjectName}
         />
       )}
     </div>
@@ -198,9 +278,10 @@ interface SchemeDetailModalProps {
   scheme: SchemeOfWork
   onClose: () => void
   onUpdate: () => void
+  getSubjectName: (subjectId: string) => string
 }
 
-function SchemeDetailModal({ scheme, onClose, onUpdate }: SchemeDetailModalProps) {
+function SchemeDetailModal({ scheme, onClose, onUpdate, getSubjectName }: SchemeDetailModalProps) {
   const [topics, setTopics] = useState<Topic[]>(scheme.topics || [])
   const [newTopic, setNewTopic] = useState<Partial<Topic>>({
     weekNumber: (scheme.topics?.length || 0) + 1,
@@ -250,7 +331,7 @@ function SchemeDetailModal({ scheme, onClose, onUpdate }: SchemeDetailModalProps
         className="bg-white rounded-lg max-w-3xl w-full max-h-96 overflow-y-auto p-6"
         onClick={(e) => e.stopPropagation()}
       >
-        <h3 className="text-2xl font-bold mb-4">{scheme.classId} - {scheme.subjectId}</h3>
+        <h3 className="text-2xl font-bold mb-4">{scheme.classId} - {getSubjectName(scheme.subjectId)}</h3>
 
         <div className="space-y-4">
           <div>
