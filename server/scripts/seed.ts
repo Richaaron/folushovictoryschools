@@ -1,11 +1,11 @@
 import mongoose from 'mongoose'
 import dotenv from 'dotenv'
-import { connectDB } from './config/db'
-import { User } from './models/User'
-import { Teacher } from './models/Teacher'
-import { Subject } from './models/Subject'
-import { Curriculum } from './models/Curriculum'
-import { SchemeOfWork } from './models/SchemeOfWork'
+import { connectDB } from '../src/config/db'
+import { User } from '../src/models/User'
+import { Teacher } from '../src/models/Teacher'
+import { Subject } from '../src/models/Subject'
+import { Curriculum } from '../src/models/Curriculum'
+import { SchemeOfWork } from '../src/models/SchemeOfWork'
 
 dotenv.config()
 

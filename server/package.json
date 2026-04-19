@@ -7,7 +7,7 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "seed": "tsx src/seed.ts"
+    "seed": "tsx scripts/seed.ts"
   },
   "dependencies": {
     "@types/express-rate-limit": "^5.1.3",
