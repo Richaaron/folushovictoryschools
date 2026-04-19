@@ -83,11 +83,11 @@ console.log('[STARTUP] Step 4: Initializing Express application...')
 const app = express()
 const PORT = envConfig.PORT
 
-// Security middleware - apply first
+console.log('[STARTUP] Applying security middleware...')
 app.use(helmet())
 app.use(securityHeaders)
 
-// CORS with restrictions
+console.log('[STARTUP] Configuring CORS...')
 const corsOrigin = envConfig.NODE_ENV === 'development' 
   ? /^http:\/\/localhost:(5173|5174|5175|5176|5177)$/  // Allow multiple dev ports
   : envConfig.CORS_ORIGIN
@@ -101,14 +101,15 @@ app.use(
   })
 )
 
-// Body parsing and sanitization
+console.log('[STARTUP] Applying body parsing and sanitization...')
 app.use(express.json({ limit: '10mb' }))
 app.use(sanitizeInput)
 
-// Request logging and rate limiting
+console.log('[STARTUP] Applying rate limiting...')
 app.use(requestLogger)
 app.use(generalLimiter)
 
+console.log('[STARTUP] Registering routes...')
 app.use('/api/auth', authRoutes)
 app.use('/api/config', configRoutes)
 app.use('/api/notifications', notificationRoutes)
@@ -116,12 +117,12 @@ app.use('/api/curriculum', curriculumRoutes)
 app.use('/api/scheme-of-work', schemeOfWorkRoutes)
 app.use('/api/observations', observationRoutes)
 
-// Chat and Activity routes
+console.log('[STARTUP] Registering chat and activity routes...')
 app.use('/api/messages', authenticate, messageRoutes)
 app.use('/api/activities', authenticate, activityRoutes)
 app.use('/api/analytics', authenticate, analyticsRoutes)
 
-// Action routes with activity logging
+console.log('[STARTUP] Registering action routes...')
 app.use('/api/results', authenticate, activityLogger, resultRoutes)
 app.use('/api/attendance', authenticate, activityLogger, attendanceRoutes)
 app.use('/api/students', authenticate, activityLogger, studentRoutes)
@@ -132,10 +133,8 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' })
 })
 
-// 404 handler - must come after all routes
+console.log('[STARTUP] Finalizing middleware...')
 app.use(notFoundHandler)
-
-// Error handler - must be last
 app.use(errorHandler)
 
 // Step 5: Connect to database and start server

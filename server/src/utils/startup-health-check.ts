@@ -102,6 +102,11 @@ async function checkPortUnix(port: number): Promise<{ status: 'available' | 'in-
  * Check if port is available
  */
 async function checkPort(port: number): Promise<{ status: 'available' | 'in-use'; message: string }> {
+  // In production, skip port check as Render handles it and it might be slow or restricted
+  if (process.env.NODE_ENV === 'production') {
+    return { status: 'available', message: 'Port check skipped in production' }
+  }
+
   const isWindows = process.platform === 'win32'
   
   try {
