@@ -1,6 +1,6 @@
 import { Router } from 'express'
-import { Teacher } from '../models/Teacher'
-import { authenticate, authorize } from '../middleware/auth'
+import { Teacher } from '../models/Teacher.js'
+import { authenticate, authorize } from '../middleware/auth.js'
 
 const router = Router()
 

@@ -1,6 +1,6 @@
 import { Router } from 'express'
-import { Notification } from '../models/Notification'
-import { authenticate, authorize, AuthRequest } from '../middleware/auth'
+import { Notification } from '../models/Notification.js'
+import { authenticate, authorize, AuthRequest } from '../middleware/auth.js'
 
 const router = Router()
 

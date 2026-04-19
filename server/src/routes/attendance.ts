@@ -1,6 +1,6 @@
 import { Router } from 'express'
-import { Attendance } from '../models/Attendance'
-import { authenticate, authorize, AuthRequest } from '../middleware/auth'
+import { Attendance } from '../models/Attendance.js'
+import { authenticate, authorize, AuthRequest } from '../middleware/auth.js'
 
 const router = Router()
 

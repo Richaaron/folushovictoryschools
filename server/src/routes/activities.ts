@@ -1,6 +1,6 @@
 import express, { Request, Response } from 'express'
-import { authenticate } from '../middleware/auth'
-import { Activity } from '../models/Activity'
+import { authenticate } from '../middleware/auth.js'
+import { Activity } from '../models/Activity.js'
 
 const router = express.Router()
 

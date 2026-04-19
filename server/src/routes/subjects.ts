@@ -1,6 +1,6 @@
 import { Router } from 'express'
-import { Subject } from '../models/Subject'
-import { authenticate, authorize } from '../middleware/auth'
+import { Subject } from '../models/Subject.js'
+import { authenticate, authorize } from '../middleware/auth.js'
 
 const router = Router()
 

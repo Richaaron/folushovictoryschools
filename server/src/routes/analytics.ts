@@ -1,8 +1,8 @@
 import express, { Request, Response } from 'express'
-import { authenticate } from '../middleware/auth'
-import { Student } from '../models/Student'
-import { SubjectResult } from '../models/SubjectResult'
-import { Subject } from '../models/Subject'
+import { authenticate } from '../middleware/auth.js'
+import { Student } from '../models/Student.js'
+import { SubjectResult } from '../models/SubjectResult.js'
+import { Subject } from '../models/Subject.js'
 
 const router = express.Router()
 

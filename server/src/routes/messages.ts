@@ -1,7 +1,7 @@
 import express, { Request, Response } from 'express'
-import { authenticate } from '../middleware/auth'
-import { Message } from '../models/Message'
-import { User } from '../models/User'
+import { authenticate } from '../middleware/auth.js'
+import { Message } from '../models/Message.js'
+import { User } from '../models/User.js'
 import mongoose from 'mongoose'
 
 const router = express.Router()

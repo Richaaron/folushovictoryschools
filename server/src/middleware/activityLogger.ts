@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express'
-import { Activity } from '../models/Activity'
-import { IUser } from '../models/User'
+import { Activity } from '../models/Activity.js'
+import { IUser } from '../models/User.js'
 
 interface AuthenticatedRequest extends Request {
   user?: IUser

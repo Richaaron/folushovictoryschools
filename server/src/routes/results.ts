@@ -1,8 +1,8 @@
 import { Router } from 'express'
-import { SubjectResult } from '../models/SubjectResult'
-import { Student } from '../models/Student'
-import { authenticate, authorize, AuthRequest } from '../middleware/auth'
-import { sendResultPublishedEmail } from '../utils/email'
+import { SubjectResult } from '../models/SubjectResult.js'
+import { Student } from '../models/Student.js'
+import { authenticate, authorize, AuthRequest } from '../middleware/auth.js'
+import { sendResultPublishedEmail } from '../utils/email.js'
 
 const router = Router()
 

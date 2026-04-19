@@ -1,7 +1,7 @@
 import { Router } from 'express'
-import { Student } from '../models/Student'
-import { authenticate, authorize } from '../middleware/auth'
-import { sendStudentRegistrationEmail } from '../utils/email'
+import { Student } from '../models/Student.js'
+import { authenticate, authorize } from '../middleware/auth.js'
+import { sendStudentRegistrationEmail } from '../utils/email.js'
 
 const router = Router()
 

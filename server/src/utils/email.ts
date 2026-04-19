@@ -1,5 +1,5 @@
 import nodemailer from 'nodemailer'
-import { Notification } from '../models/Notification'
+import { Notification } from '../models/Notification.js'
 import mongoose from 'mongoose'
 
 const transporter = nodemailer.createTransport({

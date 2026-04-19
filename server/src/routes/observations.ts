@@ -1,6 +1,6 @@
 import { Router } from 'express'
-import { Observation } from '../models/Observation'
-import { authenticate, authorize, AuthRequest } from '../middleware/auth'
+import { Observation } from '../models/Observation.js'
+import { authenticate, authorize, AuthRequest } from '../middleware/auth.js'
 
 const router = Router()
 

@@ -1,6 +1,6 @@
 import { Router } from 'express'
-import { SchemeOfWork } from '../models/SchemeOfWork'
-import { authenticate, authorize, AuthRequest } from '../middleware/auth'
+import { SchemeOfWork } from '../models/SchemeOfWork.js'
+import { authenticate, authorize, AuthRequest } from '../middleware/auth.js'
 
 const router = Router()
 

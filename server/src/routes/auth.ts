@@ -1,18 +1,18 @@
 import { Router } from 'express'
 import jwt from 'jsonwebtoken'
-import { User } from '../models/User'
-import { Teacher } from '../models/Teacher'
-import { Student } from '../models/Student'
-import { authLimiter } from '../middleware/security'
-import { authenticate, AuthRequest } from '../middleware/auth'
-import { generateToken, hashSensitiveData } from '../middleware/enhanced-auth'
+import { User } from '../models/User.js'
+import { Teacher } from '../models/Teacher.js'
+import { Student } from '../models/Student.js'
+import { authLimiter } from '../middleware/security.js'
+import { authenticate, AuthRequest } from '../middleware/auth.js'
+import { generateToken, hashSensitiveData } from '../middleware/enhanced-auth.js'
 import {
   validateEmail,
   validatePassword,
   validateName,
   validateRequiredFields,
-} from '../utils/validation'
-import { getEnvConfig } from '../utils/envConfig'
+} from '../utils/validation.js'
+import { getEnvConfig } from '../utils/envConfig.js'
 
 const router = Router()
 const envConfig = getEnvConfig()
