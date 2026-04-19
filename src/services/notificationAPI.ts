@@ -1,6 +1,12 @@
 import axios from 'axios'
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
+const getBaseUrl = () => {
+  const envUrl = import.meta.env.VITE_API_URL
+  if (!envUrl) return 'http://localhost:3001/api'
+  return envUrl.endsWith('/api') ? envUrl : `${envUrl}/api`
+}
+
+const API_URL = getBaseUrl()
 
 export interface Notification {
   _id: string

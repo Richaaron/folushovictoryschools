@@ -3,7 +3,13 @@
 import React, { createContext, useContext, useState, useCallback } from 'react'
 import { User, Teacher, Admin, Parent, AuthSession } from '../types'
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
+const getBaseUrl = () => {
+  const envUrl = import.meta.env.VITE_API_URL
+  if (!envUrl) return 'http://localhost:3001/api'
+  return envUrl.endsWith('/api') ? envUrl : `${envUrl}/api`
+}
+
+const API_URL = getBaseUrl()
 
 const DEVELOPMENT_FALLBACK_USERS = [
   {

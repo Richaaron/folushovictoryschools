@@ -4,12 +4,12 @@ import { getEnvConfig } from '../utils/envConfig.js'
 export async function connectDB(): Promise<typeof mongoose> {
   try {
     const config = getEnvConfig()
-    console.log(`[DATABASE] Attempting to connect to: ${config.MONGO_URI.split('@')[1] || 'hidden'}`)
     
     // Set connection options for better reliability
     const conn = await mongoose.connect(config.MONGO_URI, {
-      serverSelectionTimeoutMS: 10000, // Timeout after 10s instead of 30s
+      serverSelectionTimeoutMS: 15000, // 15s timeout for cloud databases
       socketTimeoutMS: 45000,
+      connectTimeoutMS: 15000,
     })
     
     console.log(`[DATABASE] ✓ MongoDB Connected: ${conn.connection.host}`)

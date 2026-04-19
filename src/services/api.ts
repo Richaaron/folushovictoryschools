@@ -3,7 +3,15 @@
 
 import { Student, Teacher, Subject, SubjectResult, Curriculum, SchemeOfWork, DEFAULT_SUBJECTS } from '../types'
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
+const getBaseUrl = () => {
+  const envUrl = import.meta.env.VITE_API_URL
+  if (!envUrl) return 'http://localhost:3001/api'
+  
+  // If the URL doesn't end with /api, append it
+  return envUrl.endsWith('/api') ? envUrl : `${envUrl}/api`
+}
+
+const API_URL = getBaseUrl()
 
 const DEV_SUBJECTS: Subject[] = DEFAULT_SUBJECTS.map((subject) => ({
   ...subject,

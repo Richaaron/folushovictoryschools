@@ -1,14 +1,18 @@
 services:
+  # Backend Web Service
   - type: web
     name: folusho-backend
     env: node
     region: oregon
     plan: free
-    buildCommand: cd server && npm install --include=dev && npm run build
+    buildCommand: cd server && npm install && npm run build
     startCommand: cd server && npm start
+    healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
         value: production
+      - key: RENDER
+        value: "true"
       - key: PORT
         value: 10000
       - key: MONGO_URI
@@ -16,7 +20,12 @@ services:
       - key: JWT_SECRET
         generateValue: true
       - key: CORS_ORIGIN
-        value: https://your-frontend-url.vercel.app
+        value: "*" # Updated to allow all origins initially for easier setup
+      - key: FRONTEND_URL
+        fromService:
+          type: static
+          name: folusho-frontend
+          property: host
       - key: SESSION_TIMEOUT_MS
         value: 3600000
       - key: EMAIL_HOST
@@ -29,3 +38,20 @@ services:
         sync: false
       - key: EMAIL_FROM
         sync: false
+
+  # Frontend Static Site
+  - type: static
+    name: folusho-frontend
+    env: static
+    buildCommand: npm install && npm run build
+    publishPath: ./dist
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: folusho-backend
+          property: host
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

@@ -109,7 +109,7 @@ export function printDiagnostics(): void {
   
   getEnvFilePaths().forEach(p => {
     const exists = fs.existsSync(p)
-    console.log(`  ${exists ? '✓' : '✗'} ${p}`)
+    console.log(`  ${exists ? '✓' : '✗'} ${path.basename(p)}`)
   })
   
   console.log('[ENV-LOADER] ===================================')
