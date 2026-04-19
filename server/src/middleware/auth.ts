@@ -1,7 +1,8 @@
 import { Request, Response, NextFunction } from 'express'
 import jwt from 'jsonwebtoken'
+import { getEnvConfig } from '../utils/envConfig.js'
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your_fallback_secret_key'
+const config = getEnvConfig()
 
 export interface AuthRequest extends Request {
   user?: {
@@ -19,7 +20,7 @@ export const authenticate = (req: AuthRequest, res: Response, next: NextFunction
   }
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as { id: string; role: string; email: string }
+    const decoded = jwt.verify(token, config.JWT_SECRET) as { id: string; role: string; email: string }
     req.user = decoded
     next()
   } catch (error) {

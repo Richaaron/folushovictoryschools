@@ -1,5 +1,8 @@
 import { Request, Response, NextFunction } from 'express'
 import rateLimit from 'express-rate-limit'
+import { getEnvConfig } from '../utils/envConfig.js'
+
+const envConfig = getEnvConfig()
 
 /**
  * Security Headers Middleware
@@ -28,7 +31,7 @@ export const securityHeaders = (req: Request, res: Response, next: NextFunction)
   res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=()')
   
   // HSTS for HTTPS
-  if (process.env.NODE_ENV === 'production') {
+  if (envConfig.NODE_ENV === 'production') {
     res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains')
   }
   

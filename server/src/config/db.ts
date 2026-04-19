@@ -1,10 +1,10 @@
 import mongoose from 'mongoose'
-
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/folusho'
+import { getEnvConfig } from '../utils/envConfig.js'
 
 export async function connectDB(): Promise<typeof mongoose> {
   try {
-    const conn = await mongoose.connect(MONGO_URI)
+    const config = getEnvConfig()
+    const conn = await mongoose.connect(config.MONGO_URI)
     console.log(`MongoDB Connected: ${conn.connection.host}`)
     return conn
   } catch (error) {
