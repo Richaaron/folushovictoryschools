@@ -26,11 +26,11 @@ Railway is an excellent choice for hosting your Node.js backend. It's fast, reli
      - `MONGO_URI`: (Your MongoDB Atlas connection string)
      - `JWT_SECRET`: (Your secret key)
      - `CORS_ORIGIN`: (Your Vercel frontend URL, e.g., `https://your-app.vercel.app`)
-     - `SMTP_HOST`: `smtp.gmail.com`
-     - `SMTP_PORT`: `587`
-     - `SMTP_USER`: (Your email)
-     - `SMTP_PASS`: (Your email app password)
-     - `SMTP_FROM`: (Your email)
+     - `EMAIL_HOST`: `smtp.gmail.com`
+     - `EMAIL_PORT`: `587`
+     - `EMAIL_USER`: (Your email)
+     - `EMAIL_PASS`: (Your email app password)
+     - `EMAIL_FROM`: (Your email)
 
 5. **Wait for Deployment**
    - Railway will automatically start a new build. You can watch the progress in the **Deployments** tab.
